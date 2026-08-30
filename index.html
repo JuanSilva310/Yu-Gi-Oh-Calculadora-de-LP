@@ -1,0 +1,874 @@
+<!DOCTYPE html><html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yu-Gi-Oh LP HUD</title>
+<style>
+*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+body{margin:0;height:100vh;background:linear-gradient(#48c9b0,#1f3a5f);color:#eafff3;overflow:hidden}
+.top-bar{height:10vh;display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:0 4vw}
+.top-bar .icon{width:12vw;height:12vw;max-width:52px;max-height:52px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:22px}
+.top-time{font-size:7vw;font-weight:bold}
+.field{
+  height:90vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  padding:1vh 0;
+}
+.player{
+  width:92vw;
+min-height:38vh;
+  margin:0 auto;
+
+  display:flex;
+  flex-direction:column;
+
+  align-items:center;
+  justify-content:center;
+
+  position:relative;
+}
+.character-area{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.player-panel{
+  width:100%;
+  background:#0f6b66;
+  border-radius:24px;
+  padding:3vw;
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.player.bottom{
+  flex-direction:column;
+transform: translateY(-4vh);
+}
+.player.top .character-area{
+  order: 1;
+}
+
+.player.top .player-panel{
+  order: 2;
+}
+
+.player.bottom .character-area{
+  order: 1;
+}
+
+.player.bottom .player-panel{
+  order: 2;
+}
+.info{display:flex;flex-direction:column;gap:0.5vh}
+.name{font-size:5vw}
+.lp-row{display:flex;align-items:baseline;gap:1vw}
+.lp-label{font-size:4vw}
+.lp-value{font-size:10vw;font-weight:bold;line-height:1}
+.controls{display:flex;gap:2vw}
+.controls button{width:10vw;height:10vw;max-width:48px;max-height:48px;border:none;border-radius:12px;font-size:6vw;font-weight:bold}
+.turn-time{display:flex;align-items:center;gap:2vw;font-size:4vw}
+.turn-btn{width:8vw;height:8vw;border-radius:50%;border:none;font-size:4vw}
+.plus{background:#eafff3}.minus{background:#ffd1c1}.div{background:#ffe28a}.mult{background:#d8c9ff}
+.portrait{
+  width:36vw;
+  height:36vw;
+
+  max-width:210px;
+  max-height:210px;
+
+  overflow:visible;
+  background:transparent;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.portrait img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center}
+.calc{background:#0f6b66;padding:20px;border-radius:16px;text-align:center}
+.calc input{font-size:24px;width:160px;text-align:center;margin-bottom:10px}
+.calc button{font-size:18px;margin:4px;padding:6px 14px}
+.menu {
+  position: fixed;
+  inset: 0;
+  background: #111;
+  color: white;
+  padding: 16px;
+  z-index: 999;
+}
+
+.hidden {
+  display: none;
+}
+
+.card-row {
+  display: flex;
+  overflow-x: auto;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.card {
+  min-width: 120px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.card.selected {
+  border-color: #2196f3; /* AZUL DA SELEÇÃO */
+}
+
+.card img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+}
+.player.top{
+  transform:rotate(180deg);
+}
+/* =======================
+   TELA DE BOAS-VINDAS
+======================= */
+
+.welcome-screen{
+  position:fixed;
+  inset:0;
+
+  background:rgba(0,0,0,.75);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  z-index:9999;
+}
+
+.welcome-box{
+  background:#0f6b66;
+
+  padding:30px;
+
+  border-radius:20px;
+
+  text-align:center;
+
+  min-width:250px;
+}
+
+.welcome-message{
+  font-size:24px;
+  font-weight:bold;
+
+  margin-bottom:20px;
+}
+
+#welcomeBtn{
+  border:none;
+
+  border-radius:12px;
+
+  padding:10px 35px;
+
+  font-size:20px;
+  font-weight:bold;
+
+  cursor:pointer;
+}
+
+</style>
+</head>
+<body>
+<div id="welcomeScreen" class="welcome-screen">
+  <div class="welcome-box">
+    <div class="welcome-message">Seja bem-vindo!</div>
+
+    <button id="welcomeBtn">OK</button>
+  </div>
+</div>
+
+<div class="top-bar">
+  <div class="icon">👤</div>
+  <div class="icon">⚙️</div>
+  <div class="icon" id="play">⏯</div>
+  <div class="top-time" id="globalTime">00:00</div>
+</div>
+<div class="field">
+  <div class="player top">
+
+  <div class="character-area">
+    <div class="portrait">
+      <img src="yami_yugi.png">
+    </div>
+  </div>
+
+  <div class="player-panel">
+
+    <div class="info">
+      <div class="name">Yami Yugi</div>
+
+      <div class="lp-row">
+        <span class="lp-label">LP.</span>
+        <span class="lp-value" id="lp1">4000</span>
+      </div>
+
+      <div class="turn-time">
+        <span id="time1">00:00</span>
+        <button class="turn-btn" onclick="switchTurn(1)">↻</button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="plus" onclick="openCalc(1,'+')">+</button>
+      <button class="minus" onclick="openCalc(1,'-')">−</button>
+      <button class="div" onclick="openCalc(1,'/')">÷</button>
+      <button class="mult" onclick="openCalc(1,'*')">×</button>
+    </div>
+
+  </div>
+
+</div>
+  <div class="player bottom">
+
+  <div class="character-area">
+    <div class="portrait">
+      <img src="seto_kaiba.png">
+    </div>
+  </div>
+
+  <div class="player-panel">
+
+    <div class="info" style="text-align:right">
+      <div class="name">Seto Kaiba</div>
+
+      <div class="lp-row">
+        <span class="lp-label">LP.</span>
+        <span class="lp-value" id="lp2">4000</span>
+      </div>
+
+      <div class="turn-time">
+        <button class="turn-btn" onclick="switchTurn(2)">↻</button>
+        <span id="time2">00:00</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="plus" onclick="openCalc(2,'+')">+</button>
+      <button class="minus" onclick="openCalc(2,'-')">−</button>
+      <button class="div" onclick="openCalc(2,'/')">÷</button>
+      <button class="mult" onclick="openCalc(2,'*')">×</button>
+    </div>
+
+  </div>
+
+</div>
+
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="calc">
+    <input type="number" id="value" placeholder="valor">
+    <div><button onclick="applyCalc()">OK</button><button onclick="closeOverlay()">Cancelar</button></div>
+  </div>
+</div>
+<script>
+/* =======================
+   STORAGE
+======================= */
+const STORAGE_KEY = "yugioh_lp_hud_v4";
+
+/* =======================
+   PERSONAGENS
+======================= */
+const characters = {
+  yugi: { name: "Yami Yugi" },
+  kaiba:{ name: "Seto Kaiba" }
+};
+
+/* =======================
+   ESTADO GLOBAL
+======================= */
+let state = {
+  started:false,
+  running:false,
+  turn:null,
+  globalSec:0,
+  overlayMode:null, // null | start | calc | config
+  config:{
+    initialLP:4000,
+    timeLimit:null,
+    lpSpeed:"fast" // slow | normal | fast
+  },
+  players:[
+    { char:"yugi", lp:4000, time:0 },
+    { char:"kaiba", lp:4000, time:0 }
+  ]
+};
+
+/* =======================
+   ELEMENTOS
+======================= */
+const gEl = document.getElementById("globalTime");
+const t1El = document.getElementById("time1");
+const t2El = document.getElementById("time2");
+const lp1El = document.getElementById("lp1");
+const lp2El = document.getElementById("lp2");
+const overlay = document.getElementById("overlay");
+const playBtn = document.getElementById("play");
+const configBtn = document.querySelectorAll(".icon")[1];
+const welcomeScreen = document.getElementById("welcomeScreen");
+const welcomeBtn = document.getElementById("welcomeBtn");
+
+
+/* =======================
+   ÁUDIOS DA CALCULADORA
+======================= */
+
+const calcSounds = {
+  slow: new Audio("calc/lento.mp3"),
+  normal: new Audio("calc/normal.mp3"),
+  fast: new Audio("calc/rapido.mp3")
+};
+
+function playCalcSound(){
+  const sound = calcSounds[state.config.lpSpeed];
+
+  if(!sound) return;
+
+  sound.currentTime = 0;
+
+  sound.play().catch(() => {
+    console.log("Não foi possível reproduzir o áudio.");
+  });
+}
+
+/* =======================
+   ÁUDIO DO LOBBY
+======================= */
+
+const lobbyAudio = new Audio("lobby/lobby.mp3");
+
+const clickAudio = new Audio("lobby/click.mp3");
+clickAudio.volume = 1;
+
+lobbyAudio.loop = true;
+lobbyAudio.volume = 0.5;
+
+
+function startLobbyAudio(){
+  if(state.started) return;
+
+  lobbyAudio.loop = true;
+  lobbyAudio.play().catch(() => {
+    console.log("Autoplay bloqueado pelo navegador.");
+  });
+}
+
+function unlockLobbyAudio(){
+  if(!state.started){
+    lobbyAudio.play().catch(() => {});
+  }
+
+  document.removeEventListener("click", unlockLobbyAudio);
+  document.removeEventListener("touchstart", unlockLobbyAudio);
+}
+
+document.addEventListener("click", unlockLobbyAudio);
+document.addEventListener("touchstart", unlockLobbyAudio);
+
+function stopLobbyAudio(){
+  lobbyAudio.pause();
+  lobbyAudio.currentTime = 0;
+}
+
+function playClickSound(){
+
+  clickAudio.currentTime = 0;
+
+  clickAudio.play().catch(() => {});
+
+}
+
+/* =======================
+   LOAD / SAVE
+======================= */
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+function loadState(){
+  const d = localStorage.getItem(STORAGE_KEY);
+  if(d) state = JSON.parse(d);
+}
+
+/* =======================
+   TEMPO
+======================= */
+setInterval(()=>{
+  if(!state.running || state.turn===null) return;
+
+  state.globalSec++;
+  state.players[state.turn-1].time++;
+
+  if(state.config.timeLimit && state.globalSec>=state.config.timeLimit){
+    state.running=false;
+    declareWinner();
+  }
+
+  renderTime();
+  saveState();
+},1000);
+
+function fmt(s){
+  return String(Math.floor(s/60)).padStart(2,'0')+":"+String(s%60).padStart(2,'0');
+}
+function renderTime(){
+  gEl.textContent = fmt(state.globalSec);
+  t1El.textContent = fmt(state.players[0].time);
+  t2El.textContent = fmt(state.players[1].time);
+}
+
+/* =======================
+   PLAY
+======================= */
+playBtn.onclick=()=>{
+  if(!state.started){ openStart(); return; }
+  state.running=!state.running;
+  saveState();
+};
+
+/* =======================
+   TURNO
+======================= */
+function switchTurn(){
+  if(!state.running) return;
+  state.turn = state.turn===1?2:1;
+  saveState();
+}
+
+/* =======================
+   OVERLAY START
+======================= */
+function openStart(){
+  state.overlayMode="start";
+  overlay.innerHTML=`
+  <div class="calc">
+    <h3>Quem começa?</h3>
+    <button onclick="startGame(1)">${characters.yugi.name}</button>
+    <button onclick="startGame(2)">${characters.kaiba.name}</button>
+  </div>`;
+  overlay.style.display="flex";
+}
+function startGame(p){
+  state.started=true;
+  state.running=true;
+  state.turn=p;
+stopLobbyAudio();
+  closeOverlay();
+  saveState();
+}
+
+/* =======================
+   CONFIG ⚙️
+======================= */
+configBtn.onclick=()=>{
+  state.overlayMode="config";
+  overlay.innerHTML=`
+  <div class="calc">
+    <h3>Configurações</h3>
+
+    <p>LP Inicial</p>
+    ${lpBtn(4000,"DL")}
+    ${lpBtn(6000,"TCG")}
+    ${lpBtn(8000,"OLND")}
+    <input id="customLP" type="number" min="1" placeholder="Custom">
+<button onclick="applyCustomLP()">Aplicar</button>
+
+    <p>Tempo</p>
+    ${timeBtn(null,"∞")}
+    ${timeBtn(300,"5m")}
+    ${timeBtn(1200,"20m")}
+    ${timeBtn(2100,"35m")}
+
+    <p>Velocidade LP</p>
+    ${speedBtn("slow","Lento")}
+    ${speedBtn("normal","Normal")}
+    ${speedBtn("fast","Rápido")}
+
+    <p></p>
+    <button onclick="resetFactory()">Resetar</button>
+    <button onclick="closeOverlay()">Fechar</button>
+  </div>`;
+  overlay.style.display="flex";
+};
+
+/* =======================
+   CONFIG HELPERS
+======================= */
+function lpBtn(v,l){
+  const a=state.config.initialLP===v?"style='background:#3fa9ff'":"";
+  return `<button ${a} onclick="applyLP(${v})">${l}</button>`;
+}
+function timeBtn(v,l){
+  const a=state.config.timeLimit===v?"style='background:#3fa9ff'":"";
+  return `<button ${a} onclick="applyTime(${v})">${l}</button>`;
+}
+function speedBtn(v,l){
+  const a=state.config.lpSpeed===v?"style='background:#3fa9ff'":"";
+  return `<button ${a} onclick="setSpeed('${v}')">${l}</button>`;
+}
+
+function warnReset(fn){
+  if(state.running){
+    if(confirm("Atenção: esta ação resetará o duelo. Continuar?")) fn();
+  } else fn();
+}
+
+function applyLP(v){
+  warnReset(()=>{
+    state.config.initialLP = v;
+
+    resetDuel();
+
+    configBtn.onclick();
+  });
+}
+
+
+function applyCustomLP(){
+  const input = document.getElementById("customLP");
+  const v = Number(input.value);
+
+  if(!Number.isFinite(v) || v <= 0){
+    alert("Digite um valor válido para os LP.");
+    return;
+  }
+
+  applyLP(Math.floor(v));
+}
+
+
+function applyTime(v){
+  warnReset(()=>{
+    state.config.timeLimit = v;
+
+    resetDuel();
+
+    configBtn.onclick();
+  });
+}
+
+
+function setSpeed(v){
+  state.config.lpSpeed=v;
+  saveState();
+  configBtn.onclick();
+}
+
+
+/* =======================
+   RESET DO DUELO
+======================= */
+function resetDuel(){
+  state.started = false;
+  state.running = false;
+  state.turn = null;
+
+  state.globalSec = 0;
+
+  state.players.forEach(player => {
+    player.lp = state.config.initialLP;
+    player.time = 0;
+  });
+
+  lp1El.textContent = state.players[0].lp;
+  lp2El.textContent = state.players[1].lp;
+
+  renderTime();
+  saveState();
+}
+
+/* =======================
+   RESET
+======================= */
+function resetFactory(){
+  warnReset(()=>{
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  });
+}
+
+/* =======================
+   CALCULADORA
+======================= */
+let calcTarget=0, calcOp="+";
+
+function openCalc(p,op){
+  if(state.overlayMode==="config") return; // 🔒 BUG FIX
+  if(!state.started) return;
+
+  state.overlayMode="calc";
+  calcTarget=p-1;
+  calcOp=op;
+  overlay.innerHTML=`
+  <div class="calc">
+    <input id="value" type="number" placeholder="valor">
+    <div>
+      <button onclick="applyCalc()">OK</button>
+      <button onclick="closeOverlay()">Cancelar</button>
+    </div>
+  </div>`;
+  overlay.style.display="flex";
+}
+
+function lpPerSecond(){
+  if(state.config.lpSpeed==="slow") return 100;
+  if(state.config.lpSpeed==="normal") return 250;
+  return 600;
+}
+
+function animateLP(el, from, to, onComplete){
+
+  if(from === to){
+    el.textContent = to;
+
+    if(onComplete){
+      onComplete();
+    }
+
+    return;
+  }
+
+  const diff = Math.abs(to - from);
+  const dur = (diff / lpPerSecond()) * 1000;
+  const start = performance.now();
+
+  function step(t){
+    const progress = Math.min((t - start) / dur, 1);
+
+    el.textContent = Math.round(
+      from + (to - from) * progress
+    );
+
+    if(progress < 1){
+      requestAnimationFrame(step);
+    } else {
+      el.textContent = to;
+
+      if(onComplete){
+        onComplete();
+      }
+    }
+  }
+
+  requestAnimationFrame(step);
+}
+
+function applyCalc(){
+  const v = Number(document.getElementById("value").value);
+
+  if(!Number.isFinite(v) || v <= 0){
+    alert("Digite um valor maior que zero.");
+    return;
+  }
+
+  const p = state.players[calcTarget];
+  const old = p.lp;
+
+  if(calcOp==="+") p.lp+=v;
+if(calcOp==="-") p.lp-=v;
+if(calcOp==="*") p.lp*=v;
+
+if(calcOp==="/"){
+  if(v === 0){
+    alert("Não é possível dividir LP por zero.");
+    return;
+  }
+
+  p.lp=Math.floor(p.lp/v);
+}
+  if(p.lp<0) p.lp=0;
+
+  animateLP(calcTarget ? lp2El : lp1El, old, p.lp);
+
+if(p.lp === 0){
+
+  state.running = false;
+  saveState();
+  closeOverlay();
+
+playCalcSound();
+
+  animateLP(
+    calcTarget ? lp2El : lp1El,
+    old,
+    p.lp,
+    () => {
+      declareWinner();
+    }
+  );
+
+  return;
+}
+
+playCalcSound();
+
+animateLP(
+  calcTarget ? lp2El : lp1El,
+  old,
+  p.lp
+);
+
+saveState();
+closeOverlay();
+}
+
+/* =======================
+   VITÓRIA
+======================= */
+function declareWinner(){
+  let m="Empate!";
+  if(state.players[0].lp>state.players[1].lp) m=characters.yugi.name+" venceu!";
+  if(state.players[1].lp>state.players[0].lp) m=characters.kaiba.name+" venceu!";
+  alert(m);
+}
+
+/* =======================
+   OVERLAY
+======================= */
+function closeOverlay(){
+  state.overlayMode=null;
+  overlay.style.display="none";
+}
+
+/* =======================
+   INIT
+======================= */
+function init(){
+  loadState();
+  lp1El.textContent=state.players[0].lp;
+  lp2El.textContent=state.players[1].lp;
+  renderTime();
+}
+init();
+
+let selectedP1 = null;
+let selectedP2 = null;
+
+function openMenu() {
+  document.getElementById("characterMenu").classList.remove("hidden");
+  loadCharacters();
+}
+
+function closeMenu() {
+  document.getElementById("characterMenu").classList.add("hidden");
+}
+
+function loadCharacters() {
+  const chars = characters; // usa o array que JÁ EXISTE na Alpha
+
+  const p1 = document.getElementById("p1-cards");
+  const p2 = document.getElementById("p2-cards");
+
+  p1.innerHTML = "";
+  p2.innerHTML = "";
+
+  chars.forEach(c => {
+    p1.appendChild(makeCard(c, 1));
+    p2.appendChild(makeCard(c, 2));
+  });
+
+  // card +
+  p1.appendChild(makeAddCard());
+  p2.appendChild(makeAddCard());
+}
+
+function makeCard(char, player) {
+  const div = document.createElement("div");
+  div.className = "card";
+
+  div.innerHTML = `
+    <img src="${char.img}">
+    <div>${char.name}</div>
+  `;
+
+  div.onclick = () => selectChar(div, char, player);
+  return div;
+}
+
+function selectChar(card, char, player) {
+  const row = card.parentElement;
+  [...row.children].forEach(c => c.classList.remove("selected"));
+  card.classList.add("selected");
+
+  if (player === 1) selectedP1 = char;
+  else selectedP2 = char;
+}
+
+function confirmCharacters() {
+  if (!selectedP1 || !selectedP2) return;
+
+  player1.character = selectedP1;
+  player2.character = selectedP2;
+
+  closeMenu();
+}
+
+function enterSite(){
+
+  if(!state.started){
+    lobbyAudio.currentTime = 0;
+
+    lobbyAudio.play().catch(error => {
+      console.log("Erro ao iniciar áudio do lobby:", error);
+    });
+  }
+
+  welcomeScreen.style.display = "none";
+}
+
+welcomeBtn.addEventListener("click", enterSite);
+
+document.addEventListener("click", function(event){
+
+  const element = event.target;
+
+  if(
+    element.tagName === "BUTTON" ||
+    element.classList.contains("icon")
+  ){
+    playClickSound();
+  }
+
+});
+
+</script>
+
+<div id="characterMenu" class="menu hidden">
+
+  <h2>Player 1</h2>
+  <div class="card-row" id="p1-cards"></div>
+
+  <h2>Player 2</h2>
+  <div class="card-row" id="p2-cards"></div>
+
+  <div class="menu-actions">
+    <button onclick="confirmCharacters()">Confirmar</button>
+    <button onclick="closeMenu()">Cancelar</button>
+  </div>
+
+</div>
+
+</body>
+</html>
