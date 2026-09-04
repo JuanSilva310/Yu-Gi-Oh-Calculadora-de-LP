@@ -1,0 +1,2244 @@
+<!DOCTYPE html><html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yu-Gi-Oh LP HUD</title>
+<style>
+*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+body{margin:0;height:100vh;background:linear-gradient(#48c9b0,#1f3a5f);color:#eafff3;overflow:hidden}
+.top-bar{height:10vh;display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:0 4vw}
+.top-bar .icon{width:12vw;height:12vw;max-width:52px;max-height:52px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:22px}
+.top-time{font-size:7vw;font-weight:bold}
+.field{
+  height:90vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  padding:1vh 0;
+}
+.player{
+  width:92vw;
+min-height:38vh;
+  margin:0 auto;
+
+  display:flex;
+  flex-direction:column;
+
+  align-items:center;
+  justify-content:center;
+
+  position:relative;
+}
+.character-area{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.player-panel{
+  width:100%;
+  background:#0f6b66;
+  border-radius:24px;
+  padding:3vw;
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.player.bottom{
+  flex-direction:column;
+transform: translateY(-4vh);
+}
+.player.top .character-area{
+  order: 1;
+}
+
+.player.top .player-panel{
+  order: 2;
+}
+
+.player.bottom .character-area{
+  order: 1;
+}
+
+.player.bottom .player-panel{
+  order: 2;
+}
+.info{display:flex;flex-direction:column;gap:0.5vh}
+.name{font-size:5vw}
+.lp-row{display:flex;align-items:baseline;gap:1vw}
+.lp-label{font-size:4vw}
+.lp-value{font-size:10vw;font-weight:bold;line-height:1}
+.controls{display:flex;gap:2vw}
+.controls button{width:10vw;height:10vw;max-width:48px;max-height:48px;border:none;border-radius:12px;font-size:6vw;font-weight:bold}
+.turn-time{display:flex;align-items:center;gap:2vw;font-size:4vw}
+.turn-btn{width:8vw;height:8vw;border-radius:50%;border:none;font-size:4vw}
+.plus{background:#eafff3}.minus{background:#ffd1c1}.div{background:#ffe28a}.mult{background:#d8c9ff}
+.portrait{
+  width:36vw;
+  height:36vw;
+
+  max-width:210px;
+  max-height:210px;
+
+  overflow:visible;
+  background:transparent;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.portrait img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center}
+.calc{background:#0f6b66;padding:20px;border-radius:16px;text-align:center}
+.calc input{font-size:24px;width:160px;text-align:center;margin-bottom:10px}
+.calc button{font-size:18px;margin:4px;padding:6px 14px}
+.menu {
+  position: fixed;
+  inset: 0;
+  background: #111;
+  color: white;
+  padding: 16px;
+  z-index: 999;
+}
+
+.hidden {
+  display: none;
+}
+
+.card-row {
+  display: flex;
+  overflow-x: auto;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.card {
+  min-width: 120px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.card.selected {
+  border-color: #2196f3; /* AZUL DA SELEÇÃO */
+}
+
+.card img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+}
+.player.top{
+  transform:rotate(180deg);
+}
+/* =======================
+   TELA DE BOAS-VINDAS
+======================= */
+
+.welcome-screen{
+  position:fixed;
+  inset:0;
+
+  background:rgba(0,0,0,.75);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  z-index:9999;
+}
+
+.welcome-box{
+  background:#0f6b66;
+
+  padding:30px;
+
+  border-radius:20px;
+
+  text-align:center;
+
+  min-width:250px;
+}
+
+.welcome-message{
+  font-size:24px;
+  font-weight:bold;
+
+  margin-bottom:20px;
+}
+
+#welcomeBtn{
+  border:none;
+
+  border-radius:12px;
+
+  padding:10px 35px;
+
+  font-size:20px;
+  font-weight:bold;
+
+  cursor:pointer;
+}
+
+
+/* =======================
+   PAINEL DE PERSONAGENS
+======================= */
+
+.character-menu{
+  position:fixed;
+  inset:0;
+
+  background:rgba(0,0,0,.75);
+
+  display:none;
+  align-items:center;
+  justify-content:center;
+
+  z-index:9998;
+}
+
+.character-box{
+  width:min(90vw,500px);
+  max-height:85vh;
+
+  background:#0f6b66;
+
+  border-radius:20px;
+
+  padding:20px;
+
+  display:flex;
+  flex-direction:column;
+
+  gap:15px;
+}
+
+.character-tabs{
+  display:flex;
+  gap:10px;
+}
+
+.character-tab{
+  flex:1;
+
+  border:none;
+  border-radius:12px;
+
+  padding:12px;
+
+  font-size:18px;
+  font-weight:bold;
+
+  cursor:pointer;
+}
+
+.character-tab.active-p1{
+  background:#3fa9ff;
+}
+
+.character-tab.active-p2{
+  background:#4caf50;
+}
+
+.character-list{
+  display:flex;
+  flex-direction:column;
+
+  gap:8px;
+
+  overflow-y:auto;
+
+  max-height:50vh;
+}
+
+.character-option{
+  border:none;
+
+  border-radius:10px;
+
+  padding:14px;
+
+  font-size:17px;
+  font-weight:bold;
+
+  cursor:pointer;
+
+  background:#ffffff;
+  color:#111;
+}
+
+.character-option.selected-p1{
+  background:#3fa9ff;
+  color:white;
+}
+
+.character-option.selected-p2{
+  background:#4caf50;
+  color:white;
+}
+
+.character-option.disabled{
+  opacity:.45;
+
+  cursor:not-allowed;
+}
+
+.character-actions{
+  display:flex;
+  gap:10px;
+}
+
+.character-actions button{
+  flex:1;
+
+  border:none;
+  border-radius:10px;
+
+  padding:12px;
+
+  font-size:16px;
+  font-weight:bold;
+
+  cursor:pointer;
+}
+
+
+/* =======================
+   RESULTADO DO DUELO
+======================= */
+
+.duel-result{
+  position:fixed;
+
+  left:50%;
+  top:57%;
+
+  transform:translate(-50%, -50%);
+
+  z-index:100;
+
+  color:white;
+
+  -webkit-text-stroke:2px black;
+
+  font-size:clamp(24px, 7vw, 48px);
+
+  font-weight:bold;
+
+  text-align:center;
+
+  pointer-events:none;
+}
+
+</style>
+</head>
+<body>
+<div id="welcomeScreen" class="welcome-screen">
+  <div class="welcome-box">
+    <div class="welcome-message">Seja bem-vindo!</div>
+
+    <button id="welcomeBtn">OK</button>
+  </div>
+</div>
+
+<div class="top-bar">
+  <div class="icon" id="charactersBtn">👤</div>
+  <div class="icon">⚙️</div>
+  <div class="icon" id="play">⏯</div>
+  <div class="top-time" id="globalTime">00:00</div>
+</div>
+<div class="field">
+  <div class="player top">
+
+  <div class="character-area">
+    <div class="portrait">
+  <img id="portrait1" src="">
+</div>
+  </div>
+
+  <div class="player-panel">
+
+    <div class="info">
+      <div class="name" id="name1">Player 1</div>
+
+      <div class="lp-row">
+        <span class="lp-label">LP.</span>
+        <span class="lp-value" id="lp1">4000</span>
+      </div>
+
+      <div class="turn-time">
+        <span id="time1">00:00</span>
+        <button class="turn-btn" onclick="switchTurn(1)">↻</button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="plus" onclick="openCalc(1,'+')">+</button>
+      <button class="minus" onclick="openCalc(1,'-')">−</button>
+      <button class="div" onclick="openCalc(1,'/')">÷</button>
+      <button class="mult" onclick="openCalc(1,'*')">×</button>
+    </div>
+
+  </div>
+
+</div>
+
+<div id="duelResult" class="duel-result"></div>
+
+  <div class="player bottom">
+
+  <div class="character-area">
+    <div class="portrait">
+  <img id="portrait2" src="">
+</div>
+  </div>
+
+  <div class="player-panel">
+
+    <div class="info" style="text-align:right">
+      <div class="name" id="name2">Player 2</div>
+
+      <div class="lp-row">
+        <span class="lp-label">LP.</span>
+        <span class="lp-value" id="lp2">4000</span>
+      </div>
+
+      <div class="turn-time">
+        <button class="turn-btn" onclick="switchTurn(2)">↻</button>
+        <span id="time2">00:00</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="plus" onclick="openCalc(2,'+')">+</button>
+      <button class="minus" onclick="openCalc(2,'-')">−</button>
+      <button class="div" onclick="openCalc(2,'/')">÷</button>
+      <button class="mult" onclick="openCalc(2,'*')">×</button>
+    </div>
+
+  </div>
+
+</div>
+
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="calc">
+    <input type="number" id="value" placeholder="valor">
+    <div><button onclick="applyCalc()">OK</button><button onclick="closeOverlay()">Cancelar</button></div>
+  </div>
+</div>
+
+<!-- =======================
+     PAINEL DE PERSONAGENS
+======================= -->
+
+<div id="characterMenu" class="character-menu">
+
+  <div class="character-box">
+
+    <div class="character-tabs">
+
+      <button
+        id="characterTabP1"
+        class="character-tab active-p1"
+        onclick="setCharacterPlayer(0)"
+      >
+        Player 1
+      </button>
+
+      <button
+        id="characterTabP2"
+        class="character-tab"
+        onclick="setCharacterPlayer(1)"
+      >
+        Player 2
+      </button>
+
+    </div>
+
+    <div
+      id="characterList"
+      class="character-list"
+    ></div>
+
+    <div class="character-actions">
+
+      <button onclick="resetCharacters()">
+        Resetar
+      </button>
+
+      <button onclick="closeCharacterMenu()">
+        Fechar
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script src="personagens.js"></script>
+
+<script>
+/* =======================
+   STORAGE
+======================= */
+const STORAGE_KEY = "yugioh_lp_hud_v4";
+
+/* =======================
+   MODOS DE DUELO
+======================= */
+
+const duelModes = {
+
+  dm: {
+    initialLP: 4000,
+    timeLimit: null,
+    lpSpeed: "normal",
+    locked: true
+  },
+
+  dl: {
+    initialLP: 4000,
+    timeLimit: null,
+    lpSpeed: "normal",
+    locked: false
+  },
+
+  tcg: {
+    initialLP: 6000,
+    timeLimit: 2100,
+    lpSpeed: "normal",
+    locked: true
+  },
+
+  olnd: {
+    initialLP: 8000,
+    timeLimit: null,
+    lpSpeed: "normal",
+    locked: true
+  },
+
+  custom: {
+    initialLP: 4000,
+    timeLimit: null,
+    lpSpeed: "normal",
+    locked: false
+  }
+
+};
+
+function applyDuelMode(mode){
+
+  const settings = duelModes[mode];
+
+  if(!settings) return;
+
+  warnReset(()=>{
+
+    state.config.duelMode = mode;
+
+    state.config.initialLP = settings.initialLP;
+    state.config.timeLimit = settings.timeLimit;
+    state.config.lpSpeed = settings.lpSpeed;
+
+    resetDuel();
+
+    configBtn.onclick();
+
+  });
+
+}
+
+/* =======================
+   ESTADO GLOBAL
+======================= */
+let state = {
+  started:false,
+  running:false,
+  turn:null,
+  globalSec:0,
+  overlayMode:null, // null | start | calc | config
+  musicPhase:"lobby",
+  config:{
+  duelMode:"dm", // dm | dl | tcg | olnd | custom
+  initialLP:4000,
+  timeLimit:null,
+  lpSpeed:"normal" // slow | normal | fast
+},
+  players:[
+  {
+    char:null,
+    lp:4000,
+    time:0,
+    spriteState:"base"
+  },
+
+  {
+    char:null,
+    lp:4000,
+    time:0,
+    spriteState:"base"
+  }
+]
+};
+
+/* =======================
+   ELEMENTOS
+======================= */
+const gEl = document.getElementById("globalTime");
+const t1El = document.getElementById("time1");
+const t2El = document.getElementById("time2");
+const lp1El = document.getElementById("lp1");
+const lp2El = document.getElementById("lp2");
+const overlay = document.getElementById("overlay");
+const playBtn = document.getElementById("play");
+const configBtn = document.querySelectorAll(".icon")[1];
+const welcomeScreen = document.getElementById("welcomeScreen");
+const welcomeBtn = document.getElementById("welcomeBtn");
+const name1El = document.getElementById("name1");
+const name2El = document.getElementById("name2");
+const duelResultEl = document.getElementById("duelResult");
+const portrait1El =
+  document.getElementById("portrait1");
+
+const portrait2El =
+  document.getElementById("portrait2");
+
+/* =======================
+   NOMES DOS JOGADORES
+======================= */
+
+function getPlayerDisplayName(playerIndex){
+
+  const characterId = state.players[playerIndex].char;
+
+  if(!characterId){
+    return `Player ${playerIndex + 1}`;
+  }
+
+  if(typeof characters === "undefined"){
+    return `Player ${playerIndex + 1}`;
+  }
+
+  const character = characters[characterId];
+
+  if(!character){
+    return `Player ${playerIndex + 1}`;
+  }
+
+  return character.name;
+
+}
+
+
+
+function renderPlayerNames(){
+
+  name1El.textContent = getPlayerDisplayName(0);
+  name2El.textContent = getPlayerDisplayName(1);
+
+}
+
+/* =======================
+   SONOPLASTIA DOS MODOS
+======================= */
+
+const duelMusic = {
+  dm: {
+    base: new Audio("sonoplastia/dm_base.mp3"),
+    climax: new Audio("sonoplastia/dm_climax.mp3")
+  },
+
+  dl: {
+    base: new Audio("sonoplastia/dl_base.mp3"),
+    climax: new Audio("sonoplastia/dl_climax.mp3")
+  },
+
+  tcg: {
+    base: new Audio("sonoplastia/tcg_base.mp3"),
+    climax: new Audio("sonoplastia/tcg_climax.mp3")
+  },
+
+  olnd: {
+    base: new Audio("sonoplastia/olnd_base.mp3"),
+    climax: new Audio("sonoplastia/olnd_climax.mp3")
+  },
+
+  custom: {
+    base: new Audio("sonoplastia/custom_base.mp3"),
+    climax: new Audio("sonoplastia/custom_climax.mp3")
+  }
+};
+
+Object.values(duelMusic).forEach(mode => {
+  mode.base.loop = true;
+  mode.climax.loop = true;
+
+  mode.base.volume = 0.15;
+  mode.climax.volume = 0.15;
+});
+
+
+function stopAllDuelMusic(){
+
+  Object.values(duelMusic).forEach(mode => {
+
+    mode.base.pause();
+    mode.base.currentTime = 0;
+
+    mode.climax.pause();
+    mode.climax.currentTime = 0;
+
+  });
+
+}
+
+function playDuelBaseMusic(){
+
+  stopAllDuelMusic();
+
+  const mode = state.config.duelMode;
+
+  const music = duelMusic[mode];
+
+  if(!music) return;
+
+  music.base.currentTime = 0;
+
+  music.base.play().catch(() => {
+    console.log("Não foi possível reproduzir a música do duelo.");
+  });
+
+  state.musicPhase = "base";
+
+}
+
+function playDuelClimax(){
+
+  if(state.musicPhase === "climax") return;
+
+  if(state.musicPhase === "ended") return;
+
+  const mode = state.config.duelMode;
+
+  const music = duelMusic[mode];
+
+  if(!music) return;
+
+  music.base.pause();
+  music.base.currentTime = 0;
+
+  music.climax.currentTime = 0;
+
+  music.climax.play().catch(() => {
+    console.log("Não foi possível reproduzir a música de clímax.");
+  });
+
+  state.musicPhase = "climax";
+
+}
+
+
+function checkClimax(){
+
+  if(state.musicPhase !== "base") return;
+
+  const p1LP = state.players[0].lp;
+  const p2LP = state.players[1].lp;
+
+  if(p1LP <= 1000 || p2LP <= 1000){
+    playDuelClimax();
+  }
+
+}
+
+
+/* =======================
+   ÁUDIOS DA CALCULADORA
+======================= */
+
+const calcSounds = {
+  slow: new Audio("calc/lento.mp3"),
+  normal: new Audio("calc/normal.mp3"),
+  fast: new Audio("calc/rapido.mp3")
+};
+
+Object.values(calcSounds).forEach(sound => {
+  sound.volume = 1;
+});
+
+function playCalcSound(){
+  const sound = calcSounds[state.config.lpSpeed];
+
+  if(!sound) return;
+
+  sound.currentTime = 0;
+
+  sound.play().catch(() => {
+    console.log("Não foi possível reproduzir o áudio.");
+  });
+}
+
+/* =======================
+   ÁUDIO DO LOBBY
+======================= */
+
+const lobbyAudio = new Audio("lobby/lobby.mp3");
+
+const clickAudio = new Audio("lobby/click.mp3");
+clickAudio.volume = 1;
+
+lobbyAudio.loop = true;
+lobbyAudio.volume = 0.5;
+
+
+function startLobbyAudio(){
+  if(state.started) return;
+
+  lobbyAudio.loop = true;
+  lobbyAudio.play().catch(() => {
+    console.log("Autoplay bloqueado pelo navegador.");
+  });
+}
+
+function unlockLobbyAudio(){
+  if(!state.started){
+    lobbyAudio.play().catch(() => {});
+  }
+
+  document.removeEventListener("click", unlockLobbyAudio);
+  document.removeEventListener("touchstart", unlockLobbyAudio);
+}
+
+document.addEventListener("click", unlockLobbyAudio);
+document.addEventListener("touchstart", unlockLobbyAudio);
+
+function stopLobbyAudio(){
+  lobbyAudio.pause();
+  lobbyAudio.currentTime = 0;
+}
+
+function playClickSound(){
+
+  clickAudio.currentTime = 0;
+
+  clickAudio.play().catch(() => {});
+
+}
+
+/* =======================
+   LOAD / SAVE
+======================= */
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+function loadState(){
+
+  const d =
+    localStorage.getItem(STORAGE_KEY);
+
+
+  if(d){
+
+    state = JSON.parse(d);
+
+  }
+
+
+  state.players.forEach(player => {
+
+    if(!player.spriteState){
+
+      player.spriteState = "base";
+
+    }
+
+  });
+
+}
+
+/* =======================
+   TEMPO
+======================= */
+setInterval(()=>{
+  if(!state.running || state.turn===null) return;
+
+  state.globalSec++;
+  state.players[state.turn-1].time++;
+
+  if(state.config.timeLimit && state.globalSec>=state.config.timeLimit){
+    state.running=false;
+    declareWinner();
+  }
+
+  renderTime();
+  saveState();
+},1000);
+
+function fmt(s){
+  return String(Math.floor(s/60)).padStart(2,'0')+":"+String(s%60).padStart(2,'0');
+}
+function renderTime(){
+  gEl.textContent = fmt(state.globalSec);
+  t1El.textContent = fmt(state.players[0].time);
+  t2El.textContent = fmt(state.players[1].time);
+}
+
+/* =======================
+   PLAY
+======================= */
+playBtn.onclick=()=>{
+  if(!state.started){ openStart(); return; }
+  state.running=!state.running;
+  saveState();
+};
+
+/* =======================
+   TURNO
+======================= */
+function switchTurn(){
+  if(!state.running) return;
+  state.turn = state.turn===1?2:1;
+  saveState();
+}
+
+/* =======================
+   OVERLAY START
+======================= */
+function openStart(){
+
+  state.overlayMode = "start";
+
+  const player1Name = getPlayerDisplayName(0);
+  const player2Name = getPlayerDisplayName(1);
+
+  overlay.innerHTML = `
+    <div class="calc">
+
+      <h3>Quem começa?</h3>
+
+      <button onclick="startGame(1)">
+        ${player1Name}
+      </button>
+
+      <button onclick="startGame(2)">
+        ${player2Name}
+      </button>
+
+    </div>
+  `;
+
+  overlay.style.display = "flex";
+
+}
+
+function startGame(p){
+hideDuelResult();
+  state.started=true;
+  state.running=true;
+  state.turn=p;
+stopLobbyAudio();
+playDuelBaseMusic();
+  closeOverlay();
+  saveState();
+}
+
+/* =======================
+   CONFIG ⚙️
+======================= */
+configBtn.onclick=()=>{
+  state.overlayMode="config";
+  overlay.innerHTML=`
+  <div class="calc">
+    <h3>Configurações</h3>
+
+<p>Modo de Duelo</p>
+
+${modeBtn("DM","dm")}
+${modeBtn("DL","dl")}
+${modeBtn("TCG","tcg")}
+${modeBtn("OLND","olnd")}
+${modeBtn("Custom","custom")}
+
+<div id="customLPArea"></div>
+
+    <p>Tempo</p>
+    ${timeBtn(null,"∞")}
+    ${timeBtn(300,"5m")}
+    ${timeBtn(1200,"20m")}
+    ${timeBtn(2100,"35m")}
+
+    <p>Velocidade LP</p>
+    ${speedBtn("slow","Lento")}
+    ${speedBtn("normal","Normal")}
+    ${speedBtn("fast","Rápido")}
+
+    <p></p>
+    <button onclick="resetFactory()">Resetar</button>
+    <button onclick="closeOverlay()">Fechar</button>
+  </div>`;
+  overlay.style.display="flex";
+};
+
+/* =======================
+   CONFIG HELPERS
+======================= */
+function isModeLocked(){
+
+  const mode = duelModes[state.config.duelMode];
+
+  if(!mode) return false;
+
+  return mode.locked === true;
+
+}
+
+function modeBtn(label, mode){
+
+  const selected = state.config.duelMode === mode
+    ? "style='background:#3fa9ff'"
+    : "";
+
+  return `
+    <button ${selected} onclick="applyDuelMode('${mode}')">
+      ${label}
+    </button>
+  `;
+
+}
+
+function lpBtn(v, l, mode){
+  const a = state.config.duelMode === mode
+    ? "style='background:#3fa9ff'"
+    : "";
+
+  return `<button ${a} onclick="applyLP(${v}, '${mode}')">${l}</button>`;
+}
+
+function timeBtn(v,l){
+
+  const selected = state.config.timeLimit === v;
+  const locked = isModeLocked();
+
+  let style = "";
+
+  if(selected){
+
+    if(locked){
+      style = "style='background:#e74c3c'";
+    } else {
+      style = "style='background:#3fa9ff'";
+    }
+
+  }
+
+  const action = locked
+    ? ""
+    : `onclick="applyTime(${v})"`;
+
+  return `<button ${style} ${action}>${l}</button>`;
+}
+function speedBtn(v,l){
+
+  const selected = state.config.lpSpeed === v;
+  const locked = isModeLocked();
+
+  let style = "";
+
+  if(selected){
+
+    if(locked){
+      style = "style='background:#e74c3c'";
+    } else {
+      style = "style='background:#3fa9ff'";
+    }
+
+  }
+
+  const action = locked
+    ? ""
+    : `onclick="setSpeed('${v}')"`;
+
+  return `<button ${style} ${action}>${l}</button>`;
+
+}
+
+function warnReset(fn){
+  if(state.running){
+    if(confirm("Atenção: esta ação resetará o duelo. Continuar?")) fn();
+  } else fn();
+}
+
+function applyLP(v, mode){
+  warnReset(()=>{
+    state.config.initialLP = v;
+    state.config.duelMode = mode;
+
+    resetDuel();
+
+    configBtn.onclick();
+  });
+}
+
+
+function applyCustomLP(){
+  const input = document.getElementById("customLP");
+  const v = Number(input.value);
+
+  if(!Number.isFinite(v) || v <= 0){
+    alert("Digite um valor válido para os LP.");
+    return;
+  }
+
+  applyLP(Math.floor(v), "custom");
+}
+
+
+
+function applyTime(v){
+
+  if(isModeLocked()) return;
+
+  warnReset(()=>{
+
+    state.config.timeLimit = v;
+
+    resetDuel();
+
+    configBtn.onclick();
+
+  });
+
+}
+function setSpeed(v){
+
+  if(isModeLocked()) return;
+
+  state.config.lpSpeed = v;
+
+  saveState();
+
+  configBtn.onclick();
+
+}
+
+
+
+/* =======================
+   RESET DO DUELO
+======================= */
+function resetDuel(){
+hideDuelResult();
+
+  stopAllDuelMusic();
+
+  state.started = false;
+  state.running = false;
+  state.turn = null;
+
+  state.globalSec = 0;
+
+  state.players.forEach(player => {
+    player.lp = state.config.initialLP;
+    player.time = 0;
+  });
+
+  lp1El.textContent = state.players[0].lp;
+  lp2El.textContent = state.players[1].lp;
+
+  renderTime();
+state.players.forEach(player => {
+  player.spriteState = "base";
+});
+
+renderAllPlayerSprites();
+
+  returnToLobby();
+
+}
+
+/* =======================
+   RESET
+======================= */
+function resetFactory(){
+
+  warnReset(()=>{
+
+    /* RESTAURA AS CONFIGURAÇÕES PADRÃO */
+
+    state.config = {
+      duelMode:"dm",
+      initialLP:4000,
+      timeLimit:null,
+      lpSpeed:"normal"
+    };
+
+
+    /* REMOVE PERSONAGENS */
+
+    state.players[0].char = null;
+    state.players[1].char = null;
+
+
+    /* RESETA O DUELO */
+
+    resetDuel();
+
+
+    /* ATUALIZA OS NOMES */
+
+    renderPlayerNames();
+
+
+    /* SALVA O NOVO ESTADO */
+
+    saveState();
+
+
+    /* FECHA O PAINEL */
+
+    closeOverlay();
+
+  });
+
+}
+
+
+function returnToLobby(){
+
+  stopAllDuelMusic();
+
+  state.musicPhase = "lobby";
+
+  lobbyAudio.currentTime = 0;
+
+  lobbyAudio.play().catch(() => {
+    console.log("Não foi possível reproduzir o áudio do lobby.");
+  });
+
+  saveState();
+
+}
+
+/* =======================
+   CALCULADORA
+======================= */
+let calcTarget=0, calcOp="+";
+
+function openCalc(p,op){
+  if(state.overlayMode==="config") return; // 🔒 BUG FIX
+  if(!state.started) return;
+
+  state.overlayMode="calc";
+  calcTarget=p-1;
+  calcOp=op;
+  overlay.innerHTML=`
+  <div class="calc">
+    <input id="value" type="number" placeholder="valor">
+    <div>
+      <button onclick="applyCalc()">OK</button>
+      <button onclick="closeOverlay()">Cancelar</button>
+    </div>
+  </div>`;
+  overlay.style.display="flex";
+}
+
+function lpPerSecond(){
+  if(state.config.lpSpeed==="slow") return 100;
+  if(state.config.lpSpeed==="normal") return 250;
+  return 600;
+}
+
+function animateLP(el, from, to, onComplete){
+
+  if(from === to){
+    el.textContent = to;
+
+    if(onComplete){
+      onComplete();
+    }
+
+    return;
+  }
+
+  const diff = Math.abs(to - from);
+  const dur = (diff / lpPerSecond()) * 1000;
+  const start = performance.now();
+
+  function step(t){
+    const progress = Math.min((t - start) / dur, 1);
+
+    el.textContent = Math.round(
+      from + (to - from) * progress
+    );
+
+    if(progress < 1){
+      requestAnimationFrame(step);
+    } else {
+      el.textContent = to;
+
+      if(onComplete){
+        onComplete();
+      }
+    }
+  }
+
+  requestAnimationFrame(step);
+}
+
+function applyCalc(){
+  const v = Number(document.getElementById("value").value);
+
+  if(!Number.isFinite(v) || v <= 0){
+    alert("Digite um valor maior que zero.");
+    return;
+  }
+
+  const p = state.players[calcTarget];
+  const old = p.lp;
+
+  let actionSprite = null;
+
+if(calcOp === "+"){
+  p.lp += v;
+
+  actionSprite = "heal";
+}
+
+if(calcOp === "-"){
+  p.lp -= v;
+
+  actionSprite = "damage";
+}
+
+if(calcOp === "*"){
+  p.lp *= v;
+
+  actionSprite = "heal";
+}
+
+if(calcOp === "/"){
+
+  if(v === 0){
+    alert("Não é possível dividir LP por zero.");
+    return;
+  }
+
+  p.lp = Math.floor(
+    p.lp / v
+  );
+
+  actionSprite = "damage" ;
+}
+
+  if(p.lp<0) p.lp=0;
+if(actionSprite){
+
+}
+checkClimax();
+
+if(p.lp === 0){
+
+  state.running = false;
+
+  saveState();
+
+  closeOverlay();
+
+  playCalcSound();
+
+
+  /* MOSTRA O SPRITE DE DANO */
+
+  showTemporarySprite(
+    calcTarget,
+    actionSprite
+  );
+
+
+  /* ANIMA A PERDA DE LP */
+
+  animateLP(
+    calcTarget ? lp2El : lp1El,
+    old,
+    p.lp,
+    () => {
+
+      /* A ANIMAÇÃO TERMINOU:
+         AGORA DECLARA O VENCEDOR */
+
+      declareWinner();
+
+    }
+  );
+
+  return;
+}
+
+
+playCalcSound();
+
+
+/* MOSTRA O SPRITE DE AÇÃO */
+
+showTemporarySprite(
+  calcTarget,
+  actionSprite
+);
+
+
+/* ANIMA O LP */
+
+animateLP(
+  calcTarget ? lp2El : lp1El,
+  old,
+  p.lp,
+  () => {
+
+    /* QUANDO A ANIMAÇÃO TERMINAR,
+       VOLTA AO SPRITE BASE */
+
+    if(state.musicPhase === "ended"){
+      return;
+    }
+
+    restoreBaseSprite(calcTarget);
+
+  }
+);
+
+
+saveState();
+closeOverlay();
+}
+/* =======================
+   VITÓRIA
+======================= */
+function showDuelResult(message){
+
+  duelResultEl.textContent = message;
+
+  duelResultEl.style.display = "block";
+
+}
+
+
+function hideDuelResult(){
+
+  duelResultEl.textContent = "";
+
+  duelResultEl.style.display = "none";
+
+}
+
+
+function declareWinner(){
+
+  /*
+    1. BLOQUEIA IMEDIATAMENTE O DUELO
+  */
+
+  state.running = false;
+
+  state.turn = null;
+
+
+  /*
+    2. DEFINE O ESTADO FINAL ANTES
+       DE QUALQUER CALLBACK TEMPORÁRIO
+       CONSEGUIR INTERFERIR
+  */
+
+  state.musicPhase = "ended";
+
+
+  /*
+    3. PARA TODA A SONOPLASTIA DO DUELO
+  */
+
+  stopAllDuelMusic();
+
+
+  /*
+    4. DEFINE O RESULTADO
+  */
+
+  let message = "Empate!";
+
+  let result = "draw";
+
+
+  if(
+    state.players[0].lp >
+    state.players[1].lp
+  ){
+
+    result = "p1";
+
+    message =
+      getPlayerDisplayName(0) +
+      " venceu!";
+
+  }
+
+
+  if(
+    state.players[1].lp >
+    state.players[0].lp
+  ){
+
+    result = "p2";
+
+    message =
+      getPlayerDisplayName(1) +
+      " venceu!";
+
+  }
+
+
+  /*
+    5. PRIORIDADE MÁXIMA:
+       APLICA OS SPRITES FINAIS
+  */
+
+  applyFinalSpriteStates(result);
+
+
+  /*
+    6. EXIBE O RESULTADO
+  */
+
+  showDuelResult(message);
+
+
+  /*
+    7. SALVA O ESTADO FINAL
+  */
+
+  saveState();
+
+}
+
+
+/* =======================
+   OVERLAY
+======================= */
+function closeOverlay(){
+  state.overlayMode=null;
+  overlay.style.display="none";
+}
+
+/* =======================
+   INIT
+======================= */
+function init(){
+  loadState();
+  lp1El.textContent=state.players[0].lp;
+  lp2El.textContent=state.players[1].lp;
+  renderTime();
+renderPlayerNames();
+renderAllPlayerSprites();
+}
+init();
+
+
+function enterSite(){
+
+  if(!state.started){
+    lobbyAudio.currentTime = 0;
+
+    lobbyAudio.play().catch(error => {
+      console.log("Erro ao iniciar áudio do lobby:", error);
+    });
+  }
+
+  welcomeScreen.style.display = "none";
+}
+
+welcomeBtn.addEventListener("click", enterSite);
+
+/* =======================
+   SOM DE CLIQUE GLOBAL
+======================= */
+
+document.addEventListener("click", function(event){
+
+  const clickable = event.target.closest(
+    "button, .icon, .card, [onclick]"
+  );
+
+  if(!clickable) return;
+
+  playClickSound();
+
+});
+
+
+/* =======================
+   SISTEMA DE SPRITES
+======================= */
+
+const SPRITE_TYPES = [
+  "base",
+  "heal",
+  "damage",
+  "victory",
+  "defeat"
+];
+
+function getSpritePath(characterId, spriteType){
+
+  if(!characterId) return null;
+
+  if(!SPRITE_TYPES.includes(spriteType)){
+    return null;
+  }
+
+  return `sprites/${characterId}_${spriteType}.png`;
+
+}
+
+
+function getCharacterSprites(characterId){
+
+  if(!characterId) return null;
+
+  return {
+
+    base:
+      getSpritePath(characterId, "base"),
+
+    heal:
+      getSpritePath(characterId, "heal"),
+
+    damage:
+      getSpritePath(characterId, "damage"),
+
+    victory:
+      getSpritePath(characterId, "victory"),
+
+    defeat:
+      getSpritePath(characterId, "defeat")
+
+  };
+
+}
+
+function checkSprite(path){
+
+  return new Promise(resolve => {
+
+    const img = new Image();
+
+    img.onload = () => {
+      resolve(true);
+    };
+
+    img.onerror = () => {
+      resolve(false);
+    };
+
+    img.src = path;
+
+  });
+
+}
+
+async function validateCharacterSprites(characterId){
+
+  const sprites =
+    getCharacterSprites(characterId);
+
+  if(!sprites){
+    return false;
+  }
+
+
+  const results = await Promise.all(
+
+    Object.values(sprites).map(
+      path => checkSprite(path)
+    )
+
+  );
+
+
+  return results.every(
+    exists => exists === true
+  );
+
+}
+
+
+function renderPlayerSprite(playerIndex){
+
+  const player = state.players[playerIndex];
+
+  const portrait =
+    playerIndex === 0
+      ? portrait1El
+      : portrait2El;
+
+
+  /* SEM PERSONAGEM */
+
+  if(!player.char){
+
+    portrait.removeAttribute("src");
+
+    return;
+
+  }
+
+
+  /* DEFINE O CAMINHO */
+
+  const spritePath =
+    getSpritePath(
+      player.char,
+      player.spriteState
+    );
+
+
+  if(!spritePath){
+
+    portrait.removeAttribute("src");
+
+    return;
+
+  }
+
+
+  portrait.src = spritePath;
+
+}
+
+function setPlayerSpriteState(
+  playerIndex,
+  spriteState
+){
+
+  const player =
+    state.players[playerIndex];
+
+
+  if(!SPRITE_TYPES.includes(spriteState)){
+    return;
+  }
+
+
+  player.spriteState =
+    spriteState;
+
+
+  renderPlayerSprite(playerIndex);
+
+}
+
+
+function renderAllPlayerSprites(){
+
+  renderPlayerSprite(0);
+
+  renderPlayerSprite(1);
+
+}
+
+
+function showTemporarySprite(playerIndex, spriteType){
+
+  const player = state.players[playerIndex];
+
+  if(!player.char) return;
+
+  if(!SPRITE_TYPES.includes(spriteType)){
+    return;
+  }
+
+  setPlayerSpriteState(
+    playerIndex,
+    spriteType
+  );
+
+}
+
+function isDuelEnded(){
+
+  return state.musicPhase === "ended";
+
+}
+
+function restoreBaseSprite(playerIndex){
+
+  /*
+    ESTADO FINAL TEM PRIORIDADE MÁXIMA.
+
+    Se o duelo terminou, nenhum callback
+    temporário pode restaurar o sprite base.
+  */
+
+  if(isDuelEnded()){
+    return;
+  }
+
+
+  const player =
+    state.players[playerIndex];
+
+
+  if(!player.char){
+    return;
+  }
+
+
+  setPlayerSpriteState(
+    playerIndex,
+    "base"
+  );
+
+}
+
+function applyFinalSpriteStates(result){
+
+  /*
+    RESULTADOS POSSÍVEIS:
+
+    p1 → Player 1 venceu
+    p2 → Player 2 venceu
+    draw → Empate
+  */
+
+
+  /* PLAYER 1 VENCEU */
+
+  if(result === "p1"){
+
+    setPlayerSpriteState(
+      0,
+      "victory"
+    );
+
+    setPlayerSpriteState(
+      1,
+      "defeat"
+    );
+
+    return;
+  }
+
+
+  /* PLAYER 2 VENCEU */
+
+  if(result === "p2"){
+
+    setPlayerSpriteState(
+      0,
+      "defeat"
+    );
+
+    setPlayerSpriteState(
+      1,
+      "victory"
+    );
+
+    return;
+  }
+
+
+  /*
+    EMPATE
+
+    Nenhum jogador venceu ou perdeu.
+    Os dois retornam ao estado neutro.
+  */
+
+  setPlayerSpriteState(
+    0,
+    "base"
+  );
+
+  setPlayerSpriteState(
+    1,
+    "base"
+  );
+
+}
+
+
+function playActionSprite(playerIndex, action){
+
+  let spriteType = "base";
+
+  if(action === "heal"){
+    spriteType = "heal";
+  }
+
+  if(action === "damage"){
+    spriteType = "damage";
+  }
+
+  showTemporarySprite(
+    playerIndex,
+    spriteType
+  );
+
+  setTimeout(() => {
+
+    /*
+      Se o duelo já terminou,
+      não volta para o sprite base.
+    */
+
+    if(isDuelEnded()){
+  return;
+}
+
+    restoreBaseSprite(playerIndex);
+
+  }, 1200);
+
+}
+
+/* =======================
+   SISTEMA DE PERSONAGENS
+======================= */
+
+const charactersBtn = document.getElementById("charactersBtn");
+
+const characterMenu = document.getElementById("characterMenu");
+
+const characterTabP1 = document.getElementById("characterTabP1");
+const characterTabP2 = document.getElementById("characterTabP2");
+
+const characterList = document.getElementById("characterList");
+
+
+let activeCharacterPlayer = 0;
+
+
+/* =======================
+   ABRIR PAINEL
+======================= */
+
+charactersBtn.onclick = () => {
+
+  activeCharacterPlayer = 0;
+
+  renderCharacterMenu();
+
+  characterMenu.style.display = "flex";
+
+};
+
+
+/* =======================
+   FECHAR PAINEL
+======================= */
+
+function closeCharacterMenu(){
+
+  characterMenu.style.display = "none";
+
+}
+
+
+/* =======================
+   TROCAR PLAYER ATIVO
+======================= */
+
+function setCharacterPlayer(playerIndex){
+
+  activeCharacterPlayer = playerIndex;
+
+  renderCharacterMenu();
+
+}
+
+
+/* =======================
+   RENDERIZAR PAINEL
+======================= */
+
+async function renderCharacterMenu(){
+
+  const p1Char = state.players[0].char;
+  const p2Char = state.players[1].char;
+
+
+  /* PLAYER ATIVO */
+
+  characterTabP1.classList.remove("active-p1");
+  characterTabP1.classList.remove("active-p2");
+
+  characterTabP2.classList.remove("active-p1");
+  characterTabP2.classList.remove("active-p2");
+
+
+  if(activeCharacterPlayer === 0){
+
+    characterTabP1.classList.add("active-p1");
+
+  }else{
+
+    characterTabP2.classList.add("active-p2");
+
+  }
+
+
+  /* NOMES DAS ABAS */
+
+  characterTabP1.textContent =
+    p1Char && typeof characters !== "undefined" && characters[p1Char]
+      ? characters[p1Char].name
+      : "Player 1";
+
+
+  characterTabP2.textContent =
+    p2Char && typeof characters !== "undefined" && characters[p2Char]
+      ? characters[p2Char].name
+      : "Player 2";
+
+
+  /* LISTA */
+
+  characterList.innerHTML = "";
+
+
+  if(typeof characters === "undefined"){
+
+    characterList.innerHTML =
+      "<div>Nenhum personagem disponível.</div>";
+
+    return;
+
+  }
+
+
+  for(const character of Object.values(characters)){
+
+  /*
+    5.7 — VALIDAÇÃO DO PACOTE VISUAL
+
+    O personagem só entra na lista
+    se todos os sprites obrigatórios
+    forem encontrados.
+  */
+
+  const isValid =
+    await validateCharacterSprites(
+      character.id
+    );
+
+
+  /*
+    PERSONAGEM INVÁLIDO
+
+    Se faltar qualquer sprite obrigatório,
+    ele simplesmente não aparece.
+  */
+
+  if(!isValid){
+    continue;
+  }
+
+
+  /*
+    PERSONAGEM VÁLIDO
+
+    Agora sim ele pode ser criado
+    dentro da lista.
+  */
+
+  const button =
+    document.createElement("button");
+
+
+  button.className =
+    "character-option";
+
+
+  button.textContent =
+    character.name;
+
+
+  const selectedByP1 =
+    p1Char === character.id;
+
+
+  const selectedByP2 =
+    p2Char === character.id;
+
+
+  /* COR DA SELEÇÃO */
+
+  if(selectedByP1){
+
+    button.classList.add(
+      "selected-p1"
+    );
+
+  }
+
+
+  if(selectedByP2){
+
+    button.classList.add(
+      "selected-p2"
+    );
+
+  }
+
+
+  /*
+    BLOQUEAR PERSONAGEM JÁ USADO
+    PELO OUTRO PLAYER
+  */
+
+  const usedByOtherPlayer =
+    activeCharacterPlayer === 0
+      ? selectedByP2
+      : selectedByP1;
+
+
+  if(usedByOtherPlayer){
+
+    button.classList.add(
+      "disabled"
+    );
+
+    button.disabled = true;
+
+  }
+
+
+  button.onclick = () => {
+
+    selectCharacter(
+      character.id
+    );
+
+  };
+
+
+  characterList.appendChild(
+    button
+  );
+
+}
+
+
+/* =======================
+   SELECIONAR PERSONAGEM
+======================= */
+
+async function selectCharacter(characterId){
+
+  const otherPlayer =
+    activeCharacterPlayer === 0 ? 1 : 0;
+
+
+  /*
+    SEGURANÇA:
+    IMPEDE PERSONAGEM DUPLICADO
+  */
+
+  if(
+    state.players[otherPlayer].char === characterId
+  ){
+    return;
+  }
+
+
+  /*
+    5.7 — VALIDAÇÃO FINAL
+
+    Mesmo que alguém tente selecionar
+    o personagem por outro caminho,
+    ele precisa possuir o pacote visual
+    completo.
+  */
+
+  const isValid =
+    await validateCharacterSprites(
+      characterId
+    );
+
+
+  if(!isValid){
+
+    console.warn(
+      "Personagem inválido: pacote visual incompleto."
+    );
+
+    return;
+
+  }
+
+
+  /*
+    PERSONAGEM VALIDADO
+  */
+
+  state.players[activeCharacterPlayer].char =
+    characterId;
+
+
+  state.players[activeCharacterPlayer].spriteState =
+    "base";
+
+
+  saveState();
+
+
+  renderPlayerNames();
+
+
+  renderCharacterMenu();
+
+
+  renderPlayerSprite(
+    activeCharacterPlayer
+  );
+
+}
+
+
+/* =======================
+   RESETAR PERSONAGENS
+======================= */
+
+function resetCharacters(){
+
+  state.players[0].char = null;
+state.players[0].spriteState = "base";
+
+state.players[1].char = null;
+state.players[1].spriteState = "base";
+
+
+  saveState();
+
+  renderPlayerNames();
+renderAllPlayerSprites();
+
+  activeCharacterPlayer = 0;
+
+  renderCharacterMenu();
+
+}
+
+</script>
+
+</body>
+</html>
