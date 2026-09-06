@@ -565,8 +565,9 @@ function applyDuelMode(mode){
 ======================= */
 let state = {
   started:false,
-  running:false,
-  turn:null,
+starting:false,
+running:false,
+turn:null,
   globalSec:0,
   overlayMode:null, // null | start | calc | config
   musicPhase:"lobby",
@@ -764,6 +765,168 @@ function checkClimax(){
 }
 
 
+
+/* =======================
+   FALAS DOS PERSONAGENS
+======================= */
+
+function playCharacterVoice(
+  playerIndex,
+  voiceType
+){
+
+  return new Promise(resolve => {
+
+    const player =
+      state.players[playerIndex];
+
+
+    /*
+      SEM PERSONAGEM
+
+      Na prática isso não deve acontecer
+      em um duelo normal, mas evitamos
+      travar a sequência.
+    */
+
+    if(!player.char){
+
+      resolve();
+
+      return;
+
+    }
+
+
+    /*
+      PEGA O CAMINHO DA FALA
+    */
+
+    const voicePath =
+      getVoicePath(
+        player.char,
+        voiceType
+      );
+
+
+    if(!voicePath){
+
+      resolve();
+
+      return;
+
+    }
+
+
+    /*
+      CRIA O ÁUDIO
+    */
+
+    const voice =
+      new Audio(voicePath);
+
+
+    /*
+      GARANTE QUE A SEQUÊNCIA
+      CONTINUE QUANDO A FALA
+      TERMINAR
+    */
+
+    voice.onended = () => {
+
+      resolve();
+
+    };
+
+
+    /*
+      SE DER ERRO,
+      NÃO TRAVA O DUELO
+    */
+
+    voice.onerror = () => {
+
+      console.warn(
+        "Erro ao reproduzir a fala:",
+        voicePath
+      );
+
+      resolve();
+
+    };
+
+
+    /*
+      TOCA A FALA
+    */
+
+    voice.play().catch(() => {
+
+      console.warn(
+        "Não foi possível reproduzir:",
+        voicePath
+      );
+
+      resolve();
+
+    });
+
+  });
+
+}
+
+
+/* =======================
+   SEQUÊNCIA DE INÍCIO
+======================= */
+
+async function playStartVoices(
+  startingPlayer
+){
+
+  /*
+    startingPlayer chega como:
+    1 = Player 1
+    2 = Player 2
+
+    Transformamos em índice:
+    0 = Player 1
+    1 = Player 2
+  */
+
+  const firstPlayer =
+    startingPlayer - 1;
+
+
+  const secondPlayer =
+    firstPlayer === 0
+      ? 1
+      : 0;
+
+
+  /*
+    PRIMEIRO FALA QUEM
+    COMEÇA O DUELO
+  */
+
+  await playCharacterVoice(
+    firstPlayer,
+    "start"
+  );
+
+
+  /*
+    DEPOIS FALA O OUTRO
+    PERSONAGEM
+  */
+
+  await playCharacterVoice(
+    secondPlayer,
+    "start"
+  );
+
+}
+
 /* =======================
    ÁUDIOS DA CALCULADORA
 ======================= */
@@ -843,28 +1006,181 @@ function playClickSound(){
 function saveState(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
+
+
 function loadState(){
 
   const d =
     localStorage.getItem(STORAGE_KEY);
 
 
-  if(d){
+  if(!d){
+    return;
+  }
 
-    state = JSON.parse(d);
+
+  try{
+
+    const savedState =
+      JSON.parse(d);
+
+
+    /*
+      MISTURA O ESTADO SALVO
+      COM A ESTRUTURA ATUAL
+    */
+
+    state = {
+
+      ...state,
+
+      ...savedState,
+
+      config:{
+
+        ...state.config,
+
+        ...(savedState.config || {})
+
+      },
+
+      players:
+
+        Array.isArray(savedState.players)
+
+          ? savedState.players.map(
+
+              (player, index) => ({
+
+                ...state.players[index],
+
+                ...player
+
+              })
+
+            )
+
+          : state.players
+
+    };
+
+
+  }catch(error){
+
+    console.warn(
+      "Estado salvo inválido. Usando estado padrão.",
+      error
+    );
+
+    localStorage.removeItem(
+      STORAGE_KEY
+    );
 
   }
 
 
-  state.players.forEach(player => {
+  /*
+    GARANTE starting
+  */
 
-    if(!player.spriteState){
+  if(
+    typeof state.starting === "undefined"
+  ){
 
-      player.spriteState = "base";
+    state.starting = false;
+
+  }
+
+
+  /*
+    GARANTE started
+  */
+
+  if(
+    typeof state.started === "undefined"
+  ){
+
+    state.started = false;
+
+  }
+
+
+  /*
+    GARANTE running
+  */
+
+  if(
+    typeof state.running === "undefined"
+  ){
+
+    state.running = false;
+
+  }
+
+
+  /*
+    GARANTE turn
+  */
+
+  if(
+    typeof state.turn === "undefined"
+  ){
+
+    state.turn = null;
+
+  }
+
+
+  /*
+    GARANTE O RELÓGIO GLOBAL
+  */
+
+  if(
+    typeof state.globalSec !== "number"
+  ){
+
+    state.globalSec = 0;
+
+  }
+
+
+  /*
+    GARANTE musicPhase
+  */
+
+  if(
+    !state.musicPhase
+  ){
+
+    state.musicPhase = "lobby";
+
+  }
+
+
+  /*
+    GARANTE spriteState
+  */
+
+  state.players.forEach(
+    player => {
+
+      if(!player.spriteState){
+
+        player.spriteState =
+          "base";
+
+      }
 
     }
+  );
 
-  });
+
+  /*
+    SALVA A ESTRUTURA
+    JÁ ATUALIZADA
+  */
+
+  saveState();
 
 }
 
@@ -898,10 +1214,44 @@ function renderTime(){
 /* =======================
    PLAY
 ======================= */
-playBtn.onclick=()=>{
-  if(!state.started){ openStart(); return; }
-  state.running=!state.running;
+playBtn.onclick = () => {
+
+  /*
+    SE O SISTEMA ESTÁ
+    EXECUTANDO AS FALAS
+    DE INÍCIO,
+    IGNORA O CLIQUE
+  */
+
+  if(state.starting){
+    return;
+  }
+
+
+  /*
+    DUELO AINDA NÃO COMEÇOU
+  */
+
+  if(!state.started){
+
+    openStart();
+
+    return;
+
+  }
+
+
+  /*
+    PAUSA / RETOMA
+    O DUELO
+  */
+
+  state.running =
+    !state.running;
+
+
   saveState();
+
 };
 
 /* =======================
@@ -943,15 +1293,86 @@ function openStart(){
 
 }
 
-function startGame(p){
-hideDuelResult();
-  state.started=true;
-  state.running=true;
-  state.turn=p;
-stopLobbyAudio();
-playDuelBaseMusic();
+async function startGame(p){
+
+  /*
+    REMOVE QUALQUER RESULTADO
+    DO DUELO ANTERIOR
+  */
+
+  hideDuelResult();
+state.starting = true;
+
+  /*
+    DEFINE QUEM TERÁ O TURNO,
+    MAS O CRONÔMETRO AINDA
+    NÃO COMEÇA
+  */
+
+  state.turn = p;
+
+  state.started = false;
+
+  state.running = false;
+
+
+  /*
+    FECHA A JANELA
+    DE ESCOLHA
+  */
+
   closeOverlay();
+
+
+  /*
+    PARA A MÚSICA DO LOBBY
+  */
+
+  stopLobbyAudio();
+
+
+  /*
+    SALVA O ESTADO
+  */
+
   saveState();
+
+
+  /*
+    TOCA AS FALAS
+    NA ORDEM CORRETA
+  */
+
+  await playStartVoices(p);
+
+
+  /*
+    AS FALAS TERMINARAM.
+
+    AGORA O DUELO
+    COMEÇA OFICIALMENTE.
+  */
+
+ state.starting = false;
+  state.started = true;
+
+  state.running = true;
+
+
+  /*
+    INICIA A MÚSICA
+    PRINCIPAL DO DUELO
+  */
+
+  playDuelBaseMusic();
+
+
+  /*
+    SALVA O NOVO ESTADO
+  */
+
+  saveState();
+
 }
 
 /* =======================
@@ -1359,12 +1780,18 @@ if(p.lp === 0){
   playCalcSound();
 
 
+
   /* MOSTRA O SPRITE DE DANO */
 
   showTemporarySprite(
     calcTarget,
     actionSprite
   );
+
+playCharacterVoice(
+  calcTarget,
+  actionSprite
+);
 
 
   /* ANIMA A PERDA DE LP */
@@ -1398,6 +1825,15 @@ showTemporarySprite(
 );
 
 
+/* TOCA A FALA CORRESPONDENTE
+   AO MESMO TEMPO */
+
+playCharacterVoice(
+  calcTarget,
+  actionSprite
+);
+
+
 /* ANIMA O LP */
 
 animateLP(
@@ -1422,6 +1858,78 @@ animateLP(
 saveState();
 closeOverlay();
 }
+
+
+/* =======================
+   SEQUÊNCIA FINAL DE FALAS
+======================= */
+
+async function playEndVoices(result){
+
+  /*
+    EMPATE
+
+    Não existe vitória nem derrota.
+    Portanto, nenhuma fala é tocada.
+  */
+
+  if(result === "draw"){
+    return;
+  }
+
+
+  /*
+    PLAYER 1 VENCEU
+  */
+
+  if(result === "p1"){
+
+    /* PRIMEIRO A VITÓRIA */
+
+    await playCharacterVoice(
+      0,
+      "victory"
+    );
+
+
+    /* DEPOIS A DERROTA */
+
+    await playCharacterVoice(
+      1,
+      "defeat"
+    );
+
+    return;
+
+  }
+
+
+  /*
+    PLAYER 2 VENCEU
+  */
+
+  if(result === "p2"){
+
+    /* PRIMEIRO A VITÓRIA */
+
+    await playCharacterVoice(
+      1,
+      "victory"
+    );
+
+
+    /* DEPOIS A DERROTA */
+
+    await playCharacterVoice(
+      0,
+      "defeat"
+    );
+
+  }
+
+}
+
+
 /* =======================
    VITÓRIA
 ======================= */
@@ -1443,7 +1951,7 @@ function hideDuelResult(){
 }
 
 
-function declareWinner(){
+async function declareWinner(){
 
   /*
     1. BLOQUEIA IMEDIATAMENTE O DUELO
@@ -1528,9 +2036,22 @@ function declareWinner(){
 
   saveState();
 
+
+
+
+/*
+  8. TOCA AS FALAS FINAIS
+
+  A vitória sempre vem antes
+  da derrota.
+
+  Em caso de empate,
+  playEndVoices() não toca nada.
+*/
+
+await playEndVoices(result);
+
 }
-
-
 /* =======================
    OVERLAY
 ======================= */
@@ -1543,13 +2064,85 @@ function closeOverlay(){
    INIT
 ======================= */
 function init(){
+
   loadState();
-  lp1El.textContent=state.players[0].lp;
-  lp2El.textContent=state.players[1].lp;
+
+
+  /*
+    SEGURANÇA:
+    SE O SISTEMA FOI FECHADO
+    NO MEIO DE UMA ANIMAÇÃO
+    OU PROCESSO DE INÍCIO,
+    NÃO DEIXAMOS ELE PRESO.
+  */
+
+  if(state.starting){
+
+    state.starting = false;
+
+    state.running = false;
+
+  }
+
+
+  /*
+    SE O DUELO NÃO ESTÁ ATIVO,
+    NÃO DEVE EXISTIR TURNO
+    CORRENDO.
+  */
+
+  if(!state.running){
+
+    if(!state.started){
+
+      state.turn = null;
+
+    }
+
+  }
+
+
+  /*
+    RENDERIZA LP
+  */
+
+  lp1El.textContent =
+    state.players[0].lp;
+
+  lp2El.textContent =
+    state.players[1].lp;
+
+
+  /*
+    RENDERIZA TEMPOS
+  */
+
   renderTime();
-renderPlayerNames();
-renderAllPlayerSprites();
+
+
+  /*
+    RENDERIZA NOMES
+  */
+
+  renderPlayerNames();
+
+
+  /*
+    RENDERIZA SPRITES
+  */
+
+  renderAllPlayerSprites();
+
+
+  /*
+    SALVA O ESTADO
+    JÁ NORMALIZADO
+  */
+
+  saveState();
+
 }
+
 init();
 
 
@@ -1584,6 +2177,140 @@ document.addEventListener("click", function(event){
 
 });
 
+
+/* =======================
+   SISTEMA DE FALAS
+======================= */
+
+const VOICE_TYPES = [
+  "start",
+  "heal",
+  "damage",
+  "victory",
+  "defeat"
+];
+
+function getVoicePath(characterId, voiceType){
+
+  if(!characterId){
+    return null;
+  }
+
+  if(!VOICE_TYPES.includes(voiceType)){
+    return null;
+  }
+
+  return `falas/${characterId}_${voiceType}.mp3`;
+
+}
+
+function getCharacterVoices(characterId){
+
+  if(!characterId){
+    return null;
+  }
+
+  return {
+
+    start:
+      getVoicePath(
+        characterId,
+     "start"
+      ),
+
+    heal:
+      getVoicePath(
+        characterId,
+        "heal"
+      ),
+
+    damage:
+      getVoicePath(
+        characterId,
+        "damage"
+      ),
+
+    victory:
+      getVoicePath(
+        characterId,
+        "victory"
+      ),
+
+    defeat:
+      getVoicePath(
+        characterId,
+        "defeat"
+      )
+
+  };
+
+}
+
+function checkVoice(path){
+
+  return new Promise(resolve => {
+
+    const audio =
+      new Audio();
+
+    audio.preload = "metadata";
+
+    audio.onloadedmetadata = () => {
+
+      cleanup();
+
+      resolve(true);
+
+    };
+
+    audio.onerror = () => {
+
+      cleanup();
+
+      resolve(false);
+
+    };
+
+    function cleanup(){
+
+      audio.onloadedmetadata = null;
+      audio.onerror = null;
+
+    }
+
+    audio.src = path;
+
+    audio.load();
+
+  });
+
+}
+
+async function validateCharacterVoices(characterId){
+
+  const voices =
+    getCharacterVoices(characterId);
+
+  if(!voices){
+    return false;
+  }
+
+
+  const results =
+    await Promise.all(
+
+      Object.values(voices).map(
+        path => checkVoice(path)
+      )
+
+    );
+
+
+  return results.every(
+    exists => exists === true
+  );
+
+}
 
 /* =======================
    SISTEMA DE SPRITES
@@ -2035,22 +2762,26 @@ async function renderCharacterMenu(){
     forem encontrados.
   */
 
-  const isValid =
-    await validateCharacterSprites(
-      character.id
-    );
+  const hasValidSprites =
+  await validateCharacterSprites(
+    character.id
+  );
 
 
-  /*
-    PERSONAGEM INVÁLIDO
+if(!hasValidSprites){
+  continue;
+}
 
-    Se faltar qualquer sprite obrigatório,
-    ele simplesmente não aparece.
-  */
 
-  if(!isValid){
-    continue;
-  }
+const hasValidVoices =
+  await validateCharacterVoices(
+    character.id
+  );
+
+
+if(!hasValidVoices){
+  continue;
+}
 
 
   /*
@@ -2167,23 +2898,40 @@ async function selectCharacter(characterId){
     o personagem por outro caminho,
     ele precisa possuir o pacote visual
     completo.
-  */
+ */
 
-  const isValid =
-    await validateCharacterSprites(
-      characterId
-    );
+const hasValidSprites =
+  await validateCharacterSprites(
+    characterId
+  );
 
 
-  if(!isValid){
+if(!hasValidSprites){
 
-    console.warn(
-      "Personagem inválido: pacote visual incompleto."
-    );
+  console.warn(
+    "Personagem inválido: pacote visual incompleto."
+  );
 
-    return;
+  return;
 
-  }
+}
+
+
+const hasValidVoices =
+  await validateCharacterVoices(
+    characterId
+  );
+
+
+if(!hasValidVoices){
+
+  console.warn(
+    "Personagem inválido: pacote de falas incompleto."
+  );
+
+  return;
+
+}
 
 
   /*
