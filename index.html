@@ -346,7 +346,8 @@ transform: translateY(-4vh);
   <div class="welcome-box">
     <div class="welcome-message">Seja bem-vindo!</div>
 
-    <button id="welcomeBtn">OK</button>
+    <button id="welcomeBtn" onclick="enterSite()">OK</button>
+
   </div>
 </div>
 
@@ -2148,18 +2149,51 @@ init();
 
 function enterSite(){
 
-  if(!state.started){
-    lobbyAudio.currentTime = 0;
-
-    lobbyAudio.play().catch(error => {
-      console.log("Erro ao iniciar áudio do lobby:", error);
-    });
-  }
+  /*
+    PRIORIDADE ABSOLUTA:
+    FECHAR A TELA DE BOAS-VINDAS.
+  */
 
   welcomeScreen.style.display = "none";
+
+
+  /*
+    O ÁUDIO É SECUNDÁRIO.
+
+    Mesmo que alguma parte do sistema
+    esteja com erro, o usuário não pode
+    ficar preso na tela de boas-vindas.
+  */
+
+  try{
+
+    if(!state.started){
+
+      lobbyAudio.currentTime = 0;
+
+      lobbyAudio.play().catch(error => {
+
+        console.log(
+          "Erro ao iniciar áudio do lobby:",
+          error
+        );
+
+      });
+
+    }
+
+  }catch(error){
+
+    console.warn(
+      "Erro após fechar a tela de boas-vindas:",
+      error
+    );
+
+  }
+
 }
 
-welcomeBtn.addEventListener("click", enterSite);
+
 
 /* =======================
    SOM DE CLIQUE GLOBAL
