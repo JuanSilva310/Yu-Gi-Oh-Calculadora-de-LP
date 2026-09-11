@@ -31,9 +31,12 @@ min-height:38vh;
 }
 .character-area{
   width:100%;
+
   display:flex;
   justify-content:center;
   align-items:center;
+
+  position:relative;
 }
 .player-panel{
   width:100%;
@@ -94,6 +97,74 @@ transform: translateY(-4vh);
   object-fit:contain;
   display:block;
 }
+
+
+/* =======================
+   BOTÃO ALTER EGO
+   ETAPA 2A — VISUAL
+======================= */
+
+.alter-ego-button{
+
+  position:absolute;
+
+  width:52px;
+  height:52px;
+
+  border:none;
+  border-radius:50%;
+
+  background:#f39c12;
+
+  color:white;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size:28px;
+
+  font-weight:bold;
+
+  cursor:pointer;
+
+  box-shadow:
+    0 3px 8px rgba(0,0,0,.35);
+
+  z-index:10;
+
+  padding:0;
+
+}
+
+
+/*
+  PLAYER 2
+
+  O botão fica visualmente
+  à direita do retrato.
+*/
+
+.player.bottom .alter-ego-button{
+
+  left:calc(50% + 18vw + 2vw);
+
+  top:calc(50% + 2vh);
+
+  transform:translateY(-50%);
+
+}
+
+.player.top .alter-ego-button{
+
+  left:calc(50% + 18vw  + 2vw );
+
+  top:50%;
+
+  transform:translateY(-50%);
+
+}
+
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center}
 .calc{background:#0f6b66;padding:20px;border-radius:16px;text-align:center}
 .calc input{font-size:24px;width:160px;text-align:center;margin-bottom:10px}
@@ -339,6 +410,55 @@ transform: translateY(-4vh);
   pointer-events:none;
 }
 
+/* =========================
+   ALTER EGO — 3B VISUAL
+   ========================= */
+
+.portrait{
+  position:relative;
+}
+
+.alter-ego-visual{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:20;
+  pointer-events:none;
+}
+
+.alter-ego-visual-target,
+.alter-ego-visual-sprite{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+  pointer-events:none;
+}
+
+.alter-ego-visual-target{
+  z-index:1;
+  visibility:hidden;
+}
+
+.alter-ego-visual-sprite{
+  z-index:2;
+  visibility:hidden;
+}
+
+.alter-ego-visual-white{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  background:#fff;
+  opacity:0;
+  z-index:3;
+  pointer-events:none;
+}
+
 </style>
 </head>
 <body>
@@ -361,10 +481,21 @@ transform: translateY(-4vh);
   <div class="player top">
 
   <div class="character-area">
-    <div class="portrait">
-  <img id="portrait1" src="">
-</div>
+
+  <div class="portrait">
+    <img id="portrait1" src="">
   </div>
+
+  <button
+    class="alter-ego-button"
+    id="alterEgoButton1"
+    type="button"
+  >
+    🔁
+  </button>
+
+</div>
+
 
   <div class="player-panel">
 
@@ -398,10 +529,21 @@ transform: translateY(-4vh);
   <div class="player bottom">
 
   <div class="character-area">
-    <div class="portrait">
-  <img id="portrait2" src="">
-</div>
+
+  <div class="portrait">
+    <img id="portrait2" src="">
   </div>
+
+  <button
+    class="alter-ego-button"
+    id="alterEgoButton2"
+    type="button"
+  >
+    🔁
+  </button>
+
+</div>
+
 
   <div class="player-panel">
 
@@ -616,6 +758,9 @@ const portrait1El =
 
 const portrait2El =
   document.getElementById("portrait2");
+const alterEgoButton1El = document.getElementById("alterEgoButton1");
+const alterEgoButton2El = document.getElementById("alterEgoButton2");
+
 
 /* =======================
    NOMES DOS JOGADORES
@@ -2134,6 +2279,7 @@ function init(){
 
   renderAllPlayerSprites();
 
+updateAlterEgoButtons();
 
   /*
     SALVA O ESTADO
@@ -2441,6 +2587,789 @@ async function validateCharacterSprites(characterId){
 
 }
 
+// ===============================
+// SISTEMA ALTER EGO
+// ===============================
+
+function getAlterEgoSpritePath(characterId){
+  if(!characterId) return null;
+  return `sprites/${characterId}_alter_ego.png`;
+}
+
+function getAlterEgoAudioPath(characterId){
+  if(!characterId) return null;
+  return `falas/${characterId}_alter_ego.mp3`;
+}
+
+function checkAlterEgoSprite(path){
+  return new Promise(resolve=>{
+    const img = new Image();
+
+    img.onload = () => resolve(true);
+    img.onerror = () => resolve(false);
+
+    img.src = path;
+  });
+}
+
+function checkAlterEgoAudio(path){
+  return new Promise(resolve=>{
+    const audio = new Audio();
+
+    audio.preload = "metadata";
+
+    audio.onloadedmetadata = () => {
+      cleanup();
+      resolve(true);
+    };
+
+    audio.onerror = () => {
+      cleanup();
+      resolve(false);
+    };
+
+    function cleanup(){
+      audio.onloadedmetadata = null;
+      audio.onerror = null;
+    }
+
+    audio.src = path;
+    audio.load();
+  });
+}
+
+async function validateAlterEgoResources(characterId){
+  if(!characterId) return false;
+
+  const spritePath = getAlterEgoSpritePath(characterId);
+  const audioPath = getAlterEgoAudioPath(characterId);
+
+  const [hasSprite, hasAudio] = await Promise.all([
+    checkAlterEgoSprite(spritePath),
+    checkAlterEgoAudio(audioPath)
+  ]);
+
+  return hasSprite && hasAudio;
+}
+
+
+
+function createAlterEgoVisual(
+  playerIndex,
+  currentCharacterId,
+  targetCharacterId
+){
+
+  const portrait =
+    playerIndex === 0
+      ? portrait1El
+      : portrait2El;
+
+  if(!portrait){
+    return null;
+  }
+
+  const portraitBox =
+    portrait.parentElement;
+
+  if(!portraitBox){
+    return null;
+  }
+
+  const oldLayer =
+    portraitBox.querySelector(
+      ".alter-ego-visual"
+    );
+
+  if(oldLayer){
+    oldLayer.remove();
+  }
+
+  const layer =
+    document.createElement("div");
+
+  layer.className =
+    "alter-ego-visual";
+
+  layer.style.visibility =
+    "hidden";
+
+
+  /* PERSONAGEM DESTINO */
+
+  const targetImg =
+    document.createElement("img");
+
+  targetImg.className =
+    "alter-ego-visual-target";
+
+  targetImg.src =
+    getSpritePath(
+      targetCharacterId,
+      "base"
+    );
+
+
+  /* ALTER EGO */
+
+  const alterImg =
+    document.createElement("img");
+
+  alterImg.className =
+    "alter-ego-visual-sprite";
+
+  alterImg.src =
+    getAlterEgoSpritePath(
+      currentCharacterId
+    );
+
+
+  /* CAMADA BRANCA */
+
+  const whiteLayer =
+    document.createElement("div");
+
+  whiteLayer.className =
+    "alter-ego-visual-white";
+
+  whiteLayer.style.opacity = "0";
+
+
+  layer.appendChild(targetImg);
+  layer.appendChild(alterImg);
+  layer.appendChild(whiteLayer);
+
+  portraitBox.appendChild(layer);
+
+
+  return {
+    layer,
+    targetImg,
+    alterImg,
+    whiteLayer
+  };
+}
+
+
+function removeAlterEgoVisual(
+  animation
+){
+
+  if(
+    !animation ||
+    !animation.visual
+  ){
+    return;
+  }
+
+  const layer =
+    animation.visual.layer;
+
+  if(
+    layer &&
+    layer.parentNode
+  ){
+    layer.remove();
+  }
+}
+
+/* =======================
+   MOTOR ALTER EGO
+   ETAPA 3A — TEMPO
+======================= */
+
+function startAlterEgoTransformation(playerIndex){
+
+  if(
+    playerIndex !== 0 &&
+    playerIndex !== 1
+  ){
+    return;
+  }
+
+  const player =
+    state.players[playerIndex];
+
+  if(!player.char){
+    return;
+  }
+
+  const currentCharacterId =
+    player.char;
+
+  if(
+    typeof characters === "undefined" ||
+    !characters[currentCharacterId]
+  ){
+    return;
+  }
+
+  const character =
+    characters[currentCharacterId];
+
+  if(!character.switchId){
+    return;
+  }
+
+  if(alterEgoAnimation){
+    return;
+  }
+
+
+  /* =========================
+     CRIA CAMADA VISUAL
+     ========================= */
+
+  const visual =
+    createAlterEgoVisual(
+      playerIndex,
+      currentCharacterId,
+      character.switchId
+    );
+
+
+  const startTime =
+    performance.now();
+
+
+  alterEgoAnimation = {
+
+    playerIndex,
+
+    startTime,
+
+    currentCharacterId,
+
+    targetCharacterId:
+      character.switchId,
+
+    switched:false,
+
+    phase:null,
+
+    visual
+
+  };
+
+
+  /* =========================
+     ÁUDIO ALTER EGO
+     ========================= */
+
+  const audioPath =
+    getAlterEgoAudioPath(
+      currentCharacterId
+    );
+
+  if(audioPath){
+
+    const audio =
+      new Audio(audioPath);
+
+    audio.currentTime = 0;
+
+    audio.play().catch(() => {
+
+      console.warn(
+        "Não foi possível reproduzir o áudio Alter Ego:",
+        audioPath
+      );
+
+    });
+
+  }
+
+
+  requestAnimationFrame(
+    updateAlterEgoTransformation
+  );
+}
+
+
+function updateAlterEgoTransformation(timestamp){
+
+  if(!alterEgoAnimation){
+    return;
+  }
+
+
+  const animation =
+    alterEgoAnimation;
+
+
+  const elapsed =
+    (timestamp - animation.startTime) / 1000;
+
+
+  const visual =
+    animation.visual;
+
+
+  let phase = null;
+
+
+  /* =========================
+     FASES
+     ========================= */
+
+  if(elapsed < 4){
+
+    phase = "WAIT";
+
+  }
+  else if(elapsed < 9){
+
+    phase = "COVER";
+
+  }
+  else if(elapsed < 10){
+
+    phase = "FULL_WHITE";
+
+  }
+  else if(elapsed < 11){
+
+    phase = "HIDDEN_SWITCH";
+
+  }
+  else if(elapsed < 21){
+
+    phase = "REVEAL";
+
+  }
+  else{
+
+    phase = "COMPLETE";
+
+  }
+
+
+  /* =========================
+     LOG DA FASE
+     ========================= */
+
+  if(
+    phase !== animation.phase
+  ){
+
+    animation.phase =
+      phase;
+
+    console.log(
+      "ALTER EGO — fase:",
+      phase,
+      "| tempo:",
+      elapsed.toFixed(3),
+      "s"
+    );
+
+  }
+
+
+  /* =========================
+     0s → 4s
+     PERSONAGEM NORMAL
+     ========================= */
+
+  if(elapsed < 4){
+
+    if(visual){
+
+      visual.layer.style.visibility =
+        "hidden";
+
+      visual.alterImg.style.visibility =
+        "hidden";
+
+      visual.targetImg.style.visibility =
+        "hidden";
+
+      visual.whiteLayer.style.opacity =
+        "0";
+    }
+
+  }
+
+
+  /* =========================
+     4s → 9s
+     ALTER EGO + BRANCO
+     ========================= */
+
+  else if(elapsed < 9){
+
+    if(visual){
+
+      visual.layer.style.visibility =
+        "visible";
+
+      visual.alterImg.style.visibility =
+        "visible";
+
+      visual.targetImg.style.visibility =
+        "hidden";
+
+
+      const progress =
+        (elapsed - 4) / 5;
+
+
+      visual.whiteLayer.style.opacity =
+        String(
+          Math.min(
+            1,
+            Math.max(
+              0,
+              progress
+            )
+          )
+        );
+
+    }
+
+  }
+
+
+  /* =========================
+     9s → 10s
+     BRANCO TOTAL
+     ========================= */
+
+  else if(elapsed < 10){
+
+    if(visual){
+
+      visual.layer.style.visibility =
+        "visible";
+
+      visual.alterImg.style.visibility =
+        "visible";
+
+      visual.targetImg.style.visibility =
+        "hidden";
+
+      visual.whiteLayer.style.opacity =
+        "1";
+
+    }
+
+  }
+
+
+  /* =========================
+     10s → 11s
+     TROCA ESCONDIDA
+     ========================= */
+
+  else if(elapsed < 11){
+
+    if(visual){
+
+      visual.layer.style.visibility =
+        "visible";
+
+      visual.alterImg.style.visibility =
+        "visible";
+
+      visual.targetImg.style.visibility =
+        "hidden";
+
+      visual.whiteLayer.style.opacity =
+        "1";
+
+    }
+
+  }
+
+
+  /* =========================
+     TROCA LÓGICA
+     EXATAMENTE A PARTIR DE 10s
+     ========================= */
+
+  if(
+    elapsed >= 10 &&
+    !animation.switched
+  ){
+
+    animation.switched =
+      true;
+
+
+    const player =
+      state.players[
+        animation.playerIndex
+      ];
+
+
+    player.char =
+      animation.targetCharacterId;
+
+    player.spriteState =
+      "base";
+
+
+    /*
+      O sprite normal é trocado
+      enquanto a tela ainda está
+      completamente branca.
+    */
+
+    renderPlayerSprite(
+      animation.playerIndex
+    );
+
+
+    saveState();
+
+
+    console.log(
+      "ALTER EGO — ponto de troca lógica atingido:",
+      elapsed.toFixed(3),
+      "s"
+    );
+
+  }
+
+
+  /* =========================
+     11s → 21s
+     REVELAÇÃO
+     ========================= */
+
+  if(
+    elapsed >= 11 &&
+    elapsed < 21
+  ){
+
+    if(visual){
+
+      visual.layer.style.visibility =
+        "visible";
+
+
+      /*
+        O Alter Ego desaparece
+        antes da revelação.
+      */
+
+      visual.alterImg.style.visibility =
+        "hidden";
+
+
+      /*
+        O personagem destino
+        fica preparado por baixo.
+      */
+
+      visual.targetImg.style.visibility =
+        "visible";
+
+
+      /*
+        Branco:
+        100% → 0%
+      */
+
+      const progress =
+        (elapsed - 11) / 10;
+
+
+      const opacity =
+        1 - progress;
+
+
+      visual.whiteLayer.style.opacity =
+        String(
+          Math.min(
+            1,
+            Math.max(
+              0,
+              opacity
+            )
+          )
+        );
+
+    }
+
+  }
+
+
+  /* =========================
+     21s
+     FINALIZAÇÃO
+     ========================= */
+
+  if(elapsed >= 21){
+
+    if(visual){
+
+      visual.whiteLayer.style.opacity =
+        "0";
+
+    }
+
+
+    /*
+      Garante que o estado normal
+      continue mostrando o novo personagem.
+    */
+
+    renderPlayerSprite(
+      animation.playerIndex
+    );
+
+
+    /*
+      Agora sim removemos toda
+      a camada temporária.
+    */
+
+    removeAlterEgoVisual(
+      animation
+    );
+
+
+    renderPlayerNames();
+
+
+    updateAlterEgoButtons();
+
+
+    saveState();
+
+
+    console.log(
+      "ALTER EGO — transformação concluída em:",
+      elapsed.toFixed(3),
+      "s"
+    );
+
+
+    alterEgoAnimation =
+      null;
+
+    return;
+  }
+
+
+  requestAnimationFrame(
+    updateAlterEgoTransformation
+  );
+}
+
+
+
+function setAlterEgoButtonState(button, visible, disabled = false){
+  if(!button) return;
+
+  if(!visible){
+    button.classList.add("hidden");
+    button.disabled = true;
+    return;
+  }
+
+  button.classList.remove("hidden");
+
+  if(disabled){
+    button.disabled = true;
+    button.style.opacity = "0.45";
+    button.style.cursor = "not-allowed";
+  }else{
+    button.disabled = false;
+    button.style.opacity = "1";
+    button.style.cursor = "pointer";
+  }
+}
+
+async function updateAlterEgoButtons(){
+
+  const player1CharacterId = state.players[0].char;
+  const player2CharacterId = state.players[1].char;
+
+  // Começa sempre escondendo os dois.
+  setAlterEgoButtonState(alterEgoButton1El, false);
+  setAlterEgoButtonState(alterEgoButton2El, false);
+
+  // Sem personagens, não há Alter Ego para verificar.
+  if(!player1CharacterId && !player2CharacterId){
+    return;
+  }
+
+  let player1Character = null;
+  let player2Character = null;
+
+  if(typeof characters !== "undefined"){
+    player1Character = player1CharacterId
+      ? characters[player1CharacterId]
+      : null;
+
+    player2Character = player2CharacterId
+      ? characters[player2CharacterId]
+      : null;
+  }
+
+  /*
+   * Verifica se os dois jogadores estão usando
+   * personagens pertencentes ao mesmo Alter Ego.
+   *
+   * null não pode gerar conflito.
+   */
+  const sameAlterEgo =
+    player1Character &&
+    player2Character &&
+    player1Character.alterEgoId &&
+    player2Character.alterEgoId &&
+    player1Character.alterEgoId === player2Character.alterEgoId;
+
+  // =========================
+  // JOGADOR 1
+  // =========================
+
+  if(
+    player1Character &&
+    player1Character.alterEgo === true
+  ){
+
+    const hasResources =
+      await validateAlterEgoResources(player1CharacterId);
+
+    if(hasResources){
+
+      setAlterEgoButtonState(
+        alterEgoButton1El,
+        true,
+        sameAlterEgo
+      );
+
+    }
+  }
+
+  // =========================
+  // JOGADOR 2
+  // =========================
+
+  if(
+    player2Character &&
+    player2Character.alterEgo === true
+  ){
+
+    const hasResources =
+      await validateAlterEgoResources(player2CharacterId);
+
+    if(hasResources){
+
+      setAlterEgoButtonState(
+        alterEgoButton2El,
+        true,
+        sameAlterEgo
+      );
+
+    }
+  }
+}
+
+
 
 function renderPlayerSprite(playerIndex){
 
@@ -2686,7 +3615,11 @@ const characterList = document.getElementById("characterList");
 
 
 let activeCharacterPlayer = 0;
+/* =======================
+   MOTOR ALTER EGO
+======================= */
 
+let alterEgoAnimation = null;
 
 /* =======================
    ABRIR PAINEL
@@ -2992,6 +3925,7 @@ if(!hasValidVoices){
   renderPlayerSprite(
     activeCharacterPlayer
   );
+updateAlterEgoButtons();
 
 }
 
@@ -3013,12 +3947,31 @@ state.players[1].spriteState = "base";
 
   renderPlayerNames();
 renderAllPlayerSprites();
+updateAlterEgoButtons();
 
   activeCharacterPlayer = 0;
 
   renderCharacterMenu();
 
 }
+
+/* =======================
+   BOTÕES ALTER EGO
+======================= */
+
+alterEgoButton1El.onclick = () => {
+
+  startAlterEgoTransformation(0);
+
+};
+
+
+alterEgoButton2El.onclick = () => {
+
+  startAlterEgoTransformation(1);
+
+};
+
 
 </script>
 
