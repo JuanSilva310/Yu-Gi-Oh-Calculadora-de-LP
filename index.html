@@ -434,6 +434,7 @@ transform: translateY(-4vh);
   width:100%;
   height:100%;
   object-fit:contain;
+  object-position:center bottom;
   display:block;
   pointer-events:none;
 }
@@ -2973,6 +2974,11 @@ function updateAlterEgoTransformation(timestamp){
 
   if(elapsed < 4){
 
+setNormalPortraitVisibility(
+  animation.playerIndex,
+  true
+);
+
     if(visual){
 
       visual.layer.style.visibility =
@@ -2997,6 +3003,11 @@ function updateAlterEgoTransformation(timestamp){
      ========================= */
 
   else if(elapsed < 9){
+
+setNormalPortraitVisibility(
+  animation.playerIndex,
+  false
+);
 
     if(visual){
 
@@ -3037,6 +3048,11 @@ function updateAlterEgoTransformation(timestamp){
 
   else if(elapsed < 10){
 
+setNormalPortraitVisibility(
+  animation.playerIndex,
+  false
+);
+
     if(visual){
 
       visual.layer.style.visibility =
@@ -3062,7 +3078,6 @@ function updateAlterEgoTransformation(timestamp){
      ========================= */
 
   else if(elapsed < 11){
-
     if(visual){
 
       visual.layer.style.visibility =
@@ -3202,6 +3217,11 @@ function updateAlterEgoTransformation(timestamp){
 
   if(elapsed >= 21){
 
+setNormalPortraitVisibility(
+  animation.playerIndex,
+  true
+);
+
     if(visual){
 
       visual.whiteLayer.style.opacity =
@@ -3281,6 +3301,27 @@ function setAlterEgoButtonState(button, visible, disabled = false){
     button.style.cursor = "pointer";
   }
 }
+
+
+function setNormalPortraitVisibility(
+  playerIndex,
+  visible
+){
+
+  const portrait =
+    playerIndex === 0
+      ? portrait1El
+      : portrait2El;
+
+  if(!portrait){
+    return;
+  }
+
+  portrait.style.visibility =
+    visible ? "visible" : "hidden";
+}
+
+
 
 async function updateAlterEgoButtons(){
 
@@ -3629,6 +3670,8 @@ charactersBtn.onclick = () => {
 
   activeCharacterPlayer = 0;
 
+let characterMenuRenderId = 0;
+
   renderCharacterMenu();
 
   characterMenu.style.display = "flex";
@@ -3666,11 +3709,28 @@ function setCharacterPlayer(playerIndex){
 
 async function renderCharacterMenu(){
 
-  const p1Char = state.players[0].char;
-  const p2Char = state.players[1].char;
+  /*
+    Cada chamada recebe um ID próprio.
+
+    Se outra renderização começar depois,
+    esta deixa de ter permissão para alterar
+    a lista.
+  */
+
+  const renderId =
+    ++characterMenuRenderId;
 
 
-  /* PLAYER ATIVO */
+  const p1Char =
+    state.players[0].char;
+
+  const p2Char =
+    state.players[1].char;
+
+
+  /* =========================
+     PLAYER ATIVO
+     ========================= */
 
   characterTabP1.classList.remove("active-p1");
   characterTabP1.classList.remove("active-p2");
@@ -3690,21 +3750,29 @@ async function renderCharacterMenu(){
   }
 
 
-  /* NOMES DAS ABAS */
+  /* =========================
+     NOMES DAS ABAS
+     ========================= */
 
   characterTabP1.textContent =
-    p1Char && typeof characters !== "undefined" && characters[p1Char]
+    p1Char &&
+    typeof characters !== "undefined" &&
+    characters[p1Char]
       ? characters[p1Char].name
       : "Player 1";
 
 
   characterTabP2.textContent =
-    p2Char && typeof characters !== "undefined" && characters[p2Char]
+    p2Char &&
+    typeof characters !== "undefined" &&
+    characters[p2Char]
       ? characters[p2Char].name
       : "Player 2";
 
 
-  /* LISTA */
+  /* =========================
+     LISTA
+     ========================= */
 
   characterList.innerHTML = "";
 
@@ -3719,121 +3787,191 @@ async function renderCharacterMenu(){
   }
 
 
+  /*
+    FRAGMENTO TEMPORÁRIO
+
+    Os personagens serão montados aqui
+    e só depois enviados para a lista.
+  */
+
+  const fragment =
+    document.createDocumentFragment();
+
+
   for(const character of Object.values(characters)){
 
-  /*
-    5.7 — VALIDAÇÃO DO PACOTE VISUAL
+    /*
+      Se outra renderização começou
+      enquanto estávamos lendo os arquivos,
+      esta renderização perdeu a prioridade.
+    */
 
-    O personagem só entra na lista
-    se todos os sprites obrigatórios
-    forem encontrados.
-  */
-
-  const hasValidSprites =
-  await validateCharacterSprites(
-    character.id
-  );
+    if(renderId !== characterMenuRenderId){
+      return;
+    }
 
 
-if(!hasValidSprites){
-  continue;
-}
+    /* =========================
+       VALIDAÇÃO DOS SPRITES
+       ========================= */
+
+    const hasValidSprites =
+      await validateCharacterSprites(
+        character.id
+      );
 
 
-const hasValidVoices =
-  await validateCharacterVoices(
-    character.id
-  );
+    /*
+      Durante o await outra renderização
+      pode ter começado.
+    */
+
+    if(renderId !== characterMenuRenderId){
+      return;
+    }
 
 
-if(!hasValidVoices){
-  continue;
-}
+    if(!hasValidSprites){
+      continue;
+    }
 
 
-  /*
-    PERSONAGEM VÁLIDO
+    /* =========================
+       VALIDAÇÃO DAS FALAS
+       ========================= */
 
-    Agora sim ele pode ser criado
-    dentro da lista.
-  */
-
-  const button =
-    document.createElement("button");
-
-
-  button.className =
-    "character-option";
+    const hasValidVoices =
+      await validateCharacterVoices(
+        character.id
+      );
 
 
-  button.textContent =
-    character.name;
+    /*
+      Verifica novamente depois
+      da leitura dos áudios.
+    */
+
+    if(renderId !== characterMenuRenderId){
+      return;
+    }
 
 
-  const selectedByP1 =
-    p1Char === character.id;
+    if(!hasValidVoices){
+      continue;
+    }
 
 
-  const selectedByP2 =
-    p2Char === character.id;
+    /* =========================
+       PERSONAGEM VÁLIDO
+       ========================= */
+
+    const button =
+      document.createElement("button");
 
 
-  /* COR DA SELEÇÃO */
+    button.className =
+      "character-option";
 
-  if(selectedByP1){
 
-    button.classList.add(
-      "selected-p1"
+    button.textContent =
+      character.name;
+
+
+    const selectedByP1 =
+      p1Char === character.id;
+
+
+    const selectedByP2 =
+      p2Char === character.id;
+
+
+    /* =========================
+       COR DA SELEÇÃO
+       ========================= */
+
+    if(selectedByP1){
+
+      button.classList.add(
+        "selected-p1"
+      );
+
+    }
+
+
+    if(selectedByP2){
+
+      button.classList.add(
+        "selected-p2"
+      );
+
+    }
+
+
+    /* =========================
+       BLOQUEIO
+       ========================= */
+
+    const usedByOtherPlayer =
+      activeCharacterPlayer === 0
+        ? selectedByP2
+        : selectedByP1;
+
+
+    if(usedByOtherPlayer){
+
+      button.classList.add(
+        "disabled"
+      );
+
+      button.disabled = true;
+
+    }
+
+
+    /* =========================
+       CLIQUE
+       ========================= */
+
+    button.onclick = () => {
+
+      selectCharacter(
+        character.id
+      );
+
+    };
+
+
+    /*
+      Ainda não coloca diretamente
+      no DOM.
+
+      Primeiro termina a montagem.
+    */
+
+    fragment.appendChild(
+      button
     );
 
   }
 
 
-  if(selectedByP2){
-
-    button.classList.add(
-      "selected-p2"
-    );
-
-  }
-
-
   /*
-    BLOQUEAR PERSONAGEM JÁ USADO
-    PELO OUTRO PLAYER
+    SEGURANÇA FINAL
+
+    Só a renderização mais recente
+    pode substituir a lista.
   */
 
-  const usedByOtherPlayer =
-    activeCharacterPlayer === 0
-      ? selectedByP2
-      : selectedByP1;
-
-
-  if(usedByOtherPlayer){
-
-    button.classList.add(
-      "disabled"
-    );
-
-    button.disabled = true;
-
+  if(renderId !== characterMenuRenderId){
+    return;
   }
 
 
-  button.onclick = () => {
-
-    selectCharacter(
-      character.id
-    );
-
-  };
-
+  characterList.innerHTML = "";
 
   characterList.appendChild(
-    button
+    fragment
   );
-
-}
 
 }
 /* =======================
