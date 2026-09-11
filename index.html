@@ -3654,8 +3654,8 @@ const characterTabP2 = document.getElementById("characterTabP2");
 
 const characterList = document.getElementById("characterList");
 
-
 let activeCharacterPlayer = 0;
+let characterMenuRenderId = 0;
 /* =======================
    MOTOR ALTER EGO
 ======================= */
@@ -3669,8 +3669,6 @@ let alterEgoAnimation = null;
 charactersBtn.onclick = () => {
 
   activeCharacterPlayer = 0;
-
-let characterMenuRenderId = 0;
 
   renderCharacterMenu();
 
