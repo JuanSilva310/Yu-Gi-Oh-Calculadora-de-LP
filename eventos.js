@@ -70,6 +70,21 @@ const events = {
           target: 10
         },
 
+        reward: null
+      }
+
+    ],
+
+    rewards: [
+
+      {
+        id: "tcg_boas_vindas_reward_01",
+
+        requirement: {
+          type: "missions_completed",
+          amount: 2
+        },
+
         reward: {
           type: "bonus_key",
           key: "TCG_BV_001_BKC"
@@ -235,7 +250,7 @@ const events = {
     banner: "eventos/areias_do_destino_banner.png",
 
     history:
-      "Nas areias do antigo Egito existe um antigo faraó cujas lendas contam que, através de uma das Relíquias do Milênio, era capaz de controlar o poder das trevas. Este mesmo faraó foi dito pelas lendas como sendo o Rei dos Jogos. Em busca de recuperar as suas memórias, Yugi Muto e Yami Yugi adentram as areias do antigo Egito para descobrir se Yami Yugi é, de fato ou não, o espírito do bravo faraó que viveu e reinou sobre as terras do Egito 5 mil anos atrás.",
+      "Nas areias do antigo Egito existe um antigo Faraó cuja as lendas contam que, através de uma   das Relíquias do Milênio, era capaz de controlar o poder das trevas. Este mesmo Faraó foi dito pelas lendas como sendo o Rei dos Jogos. Em busca de recuperar as memórias de Seu Alterego, Yugi Muto e Yami Yugi adentram as areias do antigo Egito para descobrir se Yami Yugi é, de fato ou não, o espírito do bravo Faraó que viveu e reinou sobre as terras do Egito 5 mil anos atrás!!.",
 
     missions: [
 
