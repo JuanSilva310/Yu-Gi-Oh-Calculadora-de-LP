@@ -6,9 +6,58 @@
 <style>
 *{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
 body{margin:0;height:100vh;background:linear-gradient(#48c9b0,#1f3a5f);color:#eafff3;overflow:hidden}
-.top-bar{height:10vh;display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:0 4vw}
-.top-bar .icon{width:12vw;height:12vw;max-width:52px;max-height:52px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:22px}
-.top-time{font-size:7vw;font-weight:bold}
+.top-bar{
+  height:10vh;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:0 4vw;
+}
+
+.site-logo{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  flex:1;
+  min-width:0;
+}
+
+.site-logo img{
+  max-width:120px;
+  max-height:7vh;
+  width:auto;
+  height:auto;
+  object-fit:contain;
+  display:block;
+}
+
+.top-controls{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-shrink:0;
+}
+
+.top-bar .icon{
+  width:11vw;
+  height:11vw;
+  max-width:48px;
+  max-height:48px;
+  border-radius:50%;
+  background:rgba(255,255,255,0.2);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:21px;
+  flex-shrink:0;
+}
+
+.top-time{
+  font-size:7vw;
+  font-weight:bold;
+  flex-shrink:0;
+}
 .field{
   height:90vh;
   display:flex;
@@ -293,6 +342,297 @@ transform: translateY(-4vh);
   gap:15px;
 }
 
+/* =======================
+   PAINEL EXTRAS
+======================= */
+
+.extras-menu{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9997;
+}
+
+.extras-box{
+  width:min(90vw,500px);
+  max-height:85vh;
+  background:#0f6b66;
+  border-radius:20px;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  gap:15px;
+}
+
+.extras-box button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:rgba(255,255,255,.15);
+  color:#fff;
+  font-size:18px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.extras-box button:active{
+  transform:scale(.98);
+}
+
+/* =======================
+   PAINEL EVENTOS
+======================= */
+
+.events-menu{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9996;
+}
+
+.events-box{
+  width:min(90vw,500px);
+  max-height:85vh;
+  background:#0f6b66;
+  border-radius:20px;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  gap:15px;
+}
+
+#eventsList{
+  display:flex;
+  flex-direction:column;
+  gap:15px;
+  overflow-y:auto;
+}
+
+.events-box button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:rgba(255,255,255,.15);
+  color:#fff;
+  font-size:18px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+/* =======================
+   PAINEL DETALHES EVENTO
+======================= */
+
+.event-details-menu{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9995;
+}
+
+.event-details-box{
+  width:min(92vw,560px);
+  max-height:90vh;
+
+  background:#0f6b66;
+  border-radius:20px;
+
+  padding:18px;
+
+  display:flex;
+  flex-direction:column;
+
+  gap:14px;
+
+  overflow-y:auto;
+
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+}
+
+.event-details-overlay{
+  background:rgba(15,107,102,.92);
+
+  border-radius:16px;
+
+  padding:14px;
+
+  display:flex;
+  flex-direction:column;
+
+  gap:14px;
+}
+
+.event-details-banner{
+  width:100%;
+
+  max-height:220px;
+
+  object-fit:contain;
+
+  display:block;
+
+  border-radius:14px;
+}
+
+.event-details-header{
+  display:flex;
+
+  justify-content:space-between;
+  align-items:center;
+
+  gap:10px;
+
+  border-bottom:1px solid rgba(255,255,255,.25);
+
+  padding-bottom:10px;
+}
+
+.event-details-name{
+  font-size:24px;
+  font-weight:bold;
+}
+
+.event-details-id{
+  font-size:15px;
+  font-weight:bold;
+
+  white-space:nowrap;
+
+  background:rgba(0,0,0,.25);
+
+  padding:6px 9px;
+
+  border-radius:8px;
+}
+
+.event-details-section-title{
+  font-size:20px;
+  font-weight:bold;
+
+  text-align:center;
+
+  margin-top:4px;
+}
+
+.event-details-history{
+  font-size:16px;
+  line-height:1.5;
+
+  text-align:justify;
+
+  background:rgba(0,0,0,.18);
+
+  padding:12px;
+
+  border-radius:12px;
+}
+
+.event-missions-list{
+  display:flex;
+  flex-direction:column;
+
+  gap:10px;
+}
+
+.event-mission{
+  background:rgba(0,0,0,.20);
+
+  border-radius:12px;
+
+  padding:12px;
+
+  display:flex;
+  flex-direction:column;
+
+  gap:7px;
+}
+
+.event-mission-description{
+  font-size:16px;
+  line-height:1.35;
+}
+
+.event-mission-progress{
+  font-size:14px;
+  font-weight:bold;
+
+  text-align:right;
+
+  opacity:.9;
+}
+
+.event-rewards-list{
+  display:flex;
+  flex-direction:column;
+
+  gap:8px;
+}
+
+.event-reward{
+  background:rgba(0,0,0,.20);
+
+  border-radius:10px;
+
+  padding:10px;
+
+  font-size:15px;
+}
+
+.event-redeem-warning{
+  background:rgba(255,193,7,.18);
+
+  border:1px solid rgba(255,193,7,.45);
+
+  border-radius:12px;
+
+  padding:12px;
+
+  font-size:14px;
+
+  line-height:1.4;
+}
+
+#eventDetailsCloseButton{
+  width:100%;
+
+  padding:14px;
+
+  border:none;
+
+  border-radius:12px;
+
+  background:rgba(255,255,255,.15);
+
+  color:#fff;
+
+  font-size:18px;
+
+  font-weight:bold;
+
+  cursor:pointer;
+}
+
+#eventDetailsCloseButton:active{
+  transform:scale(.98);
+}
+
+.events-box button:active{
+  transform:scale(.98);
+}
+
 .character-tabs{
   display:flex;
   gap:10px;
@@ -473,10 +813,25 @@ transform: translateY(-4vh);
 </div>
 
 <div class="top-bar">
-  <div class="icon" id="charactersBtn">👤</div>
-  <div class="icon">⚙️</div>
-  <div class="icon" id="play">⏯</div>
+
+  <div class="site-logo">
+    <img src="lobby/logo.png" alt="Santos InforPrint">
+  </div>
+
+  <div class="top-controls">
+
+    <div class="icon" id="charactersBtn">👤</div>
+
+    <div class="icon">⚙️</div>
+
+    <div class="icon" id="play">⏯</div>
+
+    <div class="icon" id="extrasBtn">✨</div>
+
+  </div>
+
   <div class="top-time" id="globalTime">00:00</div>
+
 </div>
 <div class="field">
   <div class="player top">
@@ -631,7 +986,148 @@ transform: translateY(-4vh);
 
 </div>
 
+<!-- =======================
+     PAINEL EXTRAS
+======================= -->
+
+<div id="extrasMenu" class="extras-menu">
+
+  <div class="extras-box">
+
+    <button type="button">
+      Eventos
+    </button>
+
+    <button type="button">
+      Bônus
+    </button>
+
+    <button type="button">
+      Resgatar Personagem
+    </button>
+
+    <button type="button">
+      Roleta de Prêmios
+    </button>
+
+    <button type="button">
+      Loja
+    </button>
+
+    <button type="button">
+      Acesso do Desenvolvedor
+    </button>
+
+    <button type="button">
+      Fechar
+    </button>
+
+  </div>
+
+</div>
+
+<!-- =======================
+     PAINEL EVENTOS
+======================= -->
+
+<div id="eventsMenu" class="events-menu">
+
+  <div class="events-box">
+
+    <div id="eventsList"></div>
+
+    <button type="button" id="eventsCloseButton">
+      Fechar
+    </button>
+
+  </div>
+
+</div>
+
+<!-- =======================
+     DETALHES DO EVENTO
+======================= -->
+
+<div id="eventDetailsMenu" class="event-details-menu">
+
+  <div
+    id="eventDetailsBox"
+    class="event-details-box"
+  >
+
+    <div class="event-details-overlay">
+
+      <img
+        id="eventDetailsBanner"
+        class="event-details-banner"
+        src=""
+        alt="Banner do evento"
+      >
+
+      <div class="event-details-header">
+
+        <div
+          id="eventDetailsName"
+          class="event-details-name"
+        ></div>
+
+        <div
+          id="eventDetailsId"
+          class="event-details-id"
+        ></div>
+
+      </div>
+
+      <div
+        id="eventDetailsHistory"
+        class="event-details-history"
+      ></div>
+
+      <div class="event-details-section-title">
+        MISSÕES
+      </div>
+
+      <div
+        id="eventMissionsList"
+        class="event-missions-list"
+      ></div>
+
+      <div class="event-details-section-title">
+        PRÊMIOS
+      </div>
+
+      <div
+        id="eventRewardsList"
+        class="event-rewards-list"
+      ></div>
+
+      <div class="event-redeem-warning">
+
+        <strong>AVISO:</strong><br>
+
+        Para resgatar os prêmios que forem obtidos,
+        é necessário utilizar o ID deste evento junto
+        às chaves obtidas nos respectivos mecanismos
+        de resgate.
+
+      </div>
+
+      <button
+        type="button"
+        id="eventDetailsCloseButton"
+      >
+        Fechar
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
 <script src="personagens.js"></script>
+<script src="eventos.js"></script>
 
 <script>
 /* =======================
@@ -761,7 +1257,390 @@ const portrait2El =
   document.getElementById("portrait2");
 const alterEgoButton1El = document.getElementById("alterEgoButton1");
 const alterEgoButton2El = document.getElementById("alterEgoButton2");
+const extrasBtn = document.getElementById("extrasBtn");
+const extrasMenu = document.getElementById("extrasMenu");
+const eventsMenu = document.getElementById("eventsMenu");
+const eventsList = document.getElementById("eventsList");
+const eventsCloseButton =
+  document.getElementById("eventsCloseButton");
+const eventDetailsMenu =
+  document.getElementById("eventDetailsMenu");
 
+const eventDetailsBox =
+  document.getElementById("eventDetailsBox");
+
+const eventDetailsBanner =
+  document.getElementById("eventDetailsBanner");
+
+const eventDetailsName =
+  document.getElementById("eventDetailsName");
+
+const eventDetailsId =
+  document.getElementById("eventDetailsId");
+
+const eventDetailsHistory =
+  document.getElementById("eventDetailsHistory");
+
+const eventMissionsList =
+  document.getElementById("eventMissionsList");
+
+const eventRewardsList =
+  document.getElementById("eventRewardsList");
+
+const eventDetailsCloseButton =
+  document.getElementById("eventDetailsCloseButton");
+
+
+
+
+
+function abrirDetalhesDoEvento(event){
+
+  if(!event){
+    return;
+  }
+
+  /*
+    =========================
+    DADOS PRINCIPAIS
+    =========================
+  */
+
+  eventDetailsBanner.src =
+    event.banner || "";
+
+  eventDetailsName.textContent =
+    event.name || "Evento";
+
+  eventDetailsId.textContent =
+    event.eventId
+      ? `ID: ${event.eventId}`
+      : "ID: ---";
+
+  eventDetailsHistory.textContent =
+    event.history ||
+    "Nenhuma descrição disponível.";
+
+
+  /*
+    =========================
+    FUNDO DO EVENTO
+    =========================
+  */
+
+  if(event.background){
+
+    eventDetailsBox.style.backgroundImage =
+      `url("${event.background}")`;
+
+  }else{
+
+    eventDetailsBox.style.backgroundImage =
+      "none";
+
+  }
+
+
+  /*
+    =========================
+    MISSÕES
+    =========================
+  */
+
+  eventMissionsList.innerHTML = "";
+
+  const missions =
+    Array.isArray(event.missions)
+      ? event.missions
+      : [];
+
+
+  if(missions.length === 0){
+
+    const message =
+      document.createElement("div");
+
+    message.className =
+      "event-mission";
+
+    message.textContent =
+      "Nenhuma missão disponível.";
+
+    eventMissionsList.appendChild(
+      message
+    );
+
+  }else{
+
+    missions.forEach(mission => {
+
+      const missionBox =
+        document.createElement("div");
+
+      missionBox.className =
+        "event-mission";
+
+
+      const description =
+        document.createElement("div");
+
+      description.className =
+        "event-mission-description";
+
+      description.textContent =
+        mission.description ||
+        "Missão sem descrição.";
+
+
+      /*
+        ETAPA 1:
+        PROGRESSO SOMENTE VISUAL.
+
+        Ainda não interpretamos
+        a descrição da missão.
+      */
+
+      const progress =
+        document.createElement("div");
+
+      progress.className =
+        "event-mission-progress";
+
+      progress.textContent =
+        "Progresso: 0";
+
+
+      missionBox.appendChild(
+        description
+      );
+
+      missionBox.appendChild(
+        progress
+      );
+
+      eventMissionsList.appendChild(
+        missionBox
+      );
+
+    });
+
+  }
+
+
+  /*
+    =========================
+    PRÊMIOS GERAIS DO EVENTO
+    =========================
+  */
+
+  eventRewardsList.innerHTML = "";
+
+  const rewards =
+    Array.isArray(event.rewards)
+      ? event.rewards
+      : [];
+
+
+  if(rewards.length === 0){
+
+    const message =
+      document.createElement("div");
+
+    message.className =
+      "event-reward";
+
+    message.textContent =
+      "Nenhum prêmio geral disponível.";
+
+    eventRewardsList.appendChild(
+      message
+    );
+
+  }else{
+
+    rewards.forEach(item => {
+
+      const rewardBox =
+        document.createElement("div");
+
+      rewardBox.className =
+        "event-reward";
+
+
+      const requirement =
+        item.requirement || {};
+
+      const reward =
+        item.reward || {};
+
+
+      let requirementText =
+        "Requisito não informado.";
+
+      if(
+        requirement.type ===
+        "missions_completed"
+      ){
+
+        requirementText =
+          `Complete ${requirement.amount || 0} missão(ões).`;
+
+      }
+
+      else if(
+        requirement.type ===
+        "all_missions_completed"
+      ){
+
+        requirementText =
+          "Complete todas as missões.";
+
+      }
+
+
+      let rewardText =
+        "Prêmio não especificado.";
+
+
+      if(reward.type){
+
+        if(reward.type === "bonus_key"){
+
+          rewardText =
+            "Chave de bônus";
+
+        }
+
+        else if(
+          reward.type === "character_key"
+        ){
+
+          rewardText =
+            "Chave de personagem";
+
+        }
+
+        else{
+
+          rewardText =
+            reward.type;
+
+        }
+
+      }
+
+
+      rewardBox.textContent =
+        `${requirementText} → ${rewardText}`;
+
+
+      eventRewardsList.appendChild(
+        rewardBox
+      );
+
+    });
+
+  }
+
+
+  /*
+    =========================
+    ABRIR PAINEL
+    =========================
+  */
+
+  eventsMenu.style.display =
+    "none";
+
+  eventDetailsMenu.style.display =
+    "flex";
+
+}
+
+function carregarListaDeEventos() {
+
+  eventsList.innerHTML = "";
+
+  if(
+    typeof events === "undefined" ||
+    !events ||
+    typeof events !== "object"
+  ){
+
+    const message =
+      document.createElement("div");
+
+    message.textContent =
+      "Nenhum evento encontrado.";
+
+    message.style.textAlign = "center";
+    message.style.fontWeight = "bold";
+    message.style.padding = "10px";
+
+    eventsList.appendChild(message);
+
+    return;
+  }
+
+
+  const availableEvents =
+    Object.values(events)
+      .filter(
+        event =>
+          event &&
+          event.internalEvent !== true &&
+          event.name
+      );
+
+
+  if(availableEvents.length === 0){
+
+    const message =
+      document.createElement("div");
+
+    message.textContent =
+      "Nenhum evento encontrado.";
+
+    message.style.textAlign = "center";
+    message.style.fontWeight = "bold";
+    message.style.padding = "10px";
+
+    eventsList.appendChild(message);
+
+    return;
+  }
+
+
+  availableEvents.forEach(event => {
+
+    const button =
+      document.createElement("button");
+
+    button.type = "button";
+
+    button.textContent =
+      event.name;
+button.onclick = () => {
+
+  abrirDetalhesDoEvento(event);
+
+};
+
+    eventsList.appendChild(button);
+
+  });
+
+}
+
+eventDetailsCloseButton.onclick = () => {
+
+  eventDetailsMenu.style.display =
+    "none";
+
+  eventsMenu.style.display =
+    "flex";
+
+};
 
 /* =======================
    NOMES DOS JOGADORES
@@ -4108,6 +4987,55 @@ alterEgoButton2El.onclick = () => {
 
 };
 
+
+/* =======================
+   PAINEL EXTRAS
+======================= */
+
+extrasBtn.onclick = () => {
+
+  extrasMenu.style.display = "flex";
+
+};
+
+
+const extrasCloseButton =
+  extrasMenu.querySelector(
+    ".extras-box button:last-child"
+  );
+
+
+extrasCloseButton.onclick = () => {
+
+  extrasMenu.style.display = "none";
+
+};
+
+/* =======================
+   EVENTOS
+======================= */
+
+const extrasEventsButton =
+  extrasMenu.querySelector(
+    ".extras-box button:first-child"
+  );
+
+
+extrasEventsButton.onclick = () => {
+
+  extrasMenu.style.display = "none";
+
+  carregarListaDeEventos();
+
+  eventsMenu.style.display = "flex";
+
+};
+
+eventsCloseButton.onclick = () => {
+
+  eventsMenu.style.display = "none";
+
+};
 
 </script>
 
