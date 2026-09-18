@@ -605,6 +605,31 @@ transform: translateY(-4vh);
   line-height:1.4;
 }
 
+.event-reward-status{
+  margin-top:10px;
+  font-size:14px;
+  font-weight:bold;
+  text-align:center;
+  opacity:.9;
+}
+
+.event-reward-collect-button{
+  width:100%;
+  margin-top:10px;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:rgba(255,255,255,.18);
+  color:#fff;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.event-reward-collect-button:active{
+  transform:scale(.98);
+}
+
 #eventDetailsCloseButton{
   width:100%;
 
@@ -1480,89 +1505,192 @@ progress.textContent =
 
   }else{
 
-    rewards.forEach(item => {
+rewards.forEach(item => {
 
-      const rewardBox =
-        document.createElement("div");
+  const rewardBox =
+    document.createElement("div");
 
-      rewardBox.className =
-        "event-reward";
-
-
-      const requirement =
-        item.requirement || {};
-
-      const reward =
-        item.reward || {};
+  rewardBox.className =
+    "event-reward";
 
 
-      let requirementText =
-        "Requisito não informado.";
+  const requirement =
+    item.requirement || {};
 
-      if(
-        requirement.type ===
-        "missions_completed"
-      ){
-
-        requirementText =
-          `Complete ${requirement.amount || 0} missão(ões).`;
-
-      }
-
-      else if(
-        requirement.type ===
-        "all_missions_completed"
-      ){
-
-        requirementText =
-          "Complete todas as missões.";
-
-      }
+  const reward =
+    item.reward || {};
 
 
-      let rewardText =
-        "Prêmio não especificado.";
+  /* =========================
+     TEXTO DO REQUISITO
+  ========================= */
 
+  let requirementText =
+    "Requisito não informado.";
 
-      if(reward.type){
+  if(
+    requirement.type ===
+    "missions_completed"
+  ){
 
-        if(reward.type === "bonus_key"){
-
-          rewardText =
-            "Chave de bônus";
-
-        }
-
-        else if(
-          reward.type === "character_key"
-        ){
-
-          rewardText =
-            "Chave de personagem";
-
-        }
-
-        else{
-
-          rewardText =
-            reward.type;
-
-        }
-
-      }
-
-
-      rewardBox.textContent =
-        `${requirementText} → ${rewardText}`;
-
-
-      eventRewardsList.appendChild(
-        rewardBox
-      );
-
-    });
+    requirementText =
+      `Complete ${requirement.amount || 0} missão(ões).`;
 
   }
+  else if(
+    requirement.type ===
+    "all_missions_completed"
+  ){
+
+    requirementText =
+      "Complete todas as missões.";
+
+  }
+
+
+  /* =========================
+     TEXTO DO PRÊMIO
+  ========================= */
+
+  let rewardText =
+    "Prêmio não especificado.";
+
+  if(reward.type){
+
+    if(
+      reward.type ===
+      "bonus_key"
+    ){
+
+      rewardText =
+        "Chave de bônus";
+
+    }
+    else if(
+      reward.type ===
+      "character_key"
+    ){
+
+      rewardText =
+        "Chave de personagem";
+
+    }
+    else{
+
+      rewardText =
+        reward.type;
+
+    }
+
+  }
+
+
+  /* =========================
+     TEXTO PRINCIPAL
+  ========================= */
+
+  const description =
+    document.createElement("div");
+
+  description.textContent =
+    `${requirementText} → ${rewardText}`;
+
+
+  rewardBox.appendChild(
+    description
+  );
+
+
+  /* =========================
+     VERIFICAÇÃO DO REQUISITO
+     ETAPA 4A / 4B
+  ========================= */
+
+  const unlocked =
+    isEventRewardUnlocked(
+      event,
+      item
+    );
+
+
+  /* =========================
+     STATUS
+  ========================= */
+
+  const status =
+    document.createElement("div");
+
+  status.className =
+    "event-reward-status";
+
+
+  if(unlocked){
+
+    status.textContent =
+      "Prêmio disponível.";
+
+    status.style.color =
+      "#7CFFB2";
+
+
+    /* =========================
+       BOTÃO COLETAR
+    ========================= */
+
+    const collectButton =
+      document.createElement("button");
+
+    collectButton.type =
+      "button";
+
+    collectButton.className =
+      "event-reward-collect-button";
+
+    collectButton.textContent =
+      "COLETAR PRÊMIO";
+
+
+    /*
+      ETAPA 4C:
+      O clique será implementado
+      posteriormente.
+    */
+
+    collectButton.onclick = () => {
+
+      console.log(
+        "Prêmio disponível para coleta:",
+        item.id
+      );
+
+    };
+
+
+    rewardBox.appendChild(
+      status
+    );
+
+    rewardBox.appendChild(
+      collectButton
+    );
+
+  }else{
+
+    status.textContent =
+      "Prêmio ainda não disponível.";
+
+    rewardBox.appendChild(
+      status
+    );
+
+  }
+
+
+  eventRewardsList.appendChild(
+    rewardBox
+  );
+
+});
 
 
   /*
@@ -2331,6 +2459,158 @@ function getEventMissionProgress(
 
 }
 
+
+/* =======================
+   REQUISITOS DOS PRÊMIOS
+   ETAPA 4A
+======================= */
+
+function isEventMissionCompleted(
+  eventId,
+  mission
+){
+
+  if(
+    !mission ||
+    !mission.id ||
+    !mission.condition
+  ){
+
+    return false;
+
+  }
+
+  const target =
+    mission.condition.target;
+
+  if(
+    typeof target !== "number"
+  ){
+
+    return false;
+
+  }
+
+  const progress =
+    getEventMissionProgress(
+      eventId,
+      mission.id
+    );
+
+  return progress >= target;
+
+}
+
+
+function isEventRewardUnlocked(
+  event,
+  reward
+){
+
+  if(
+    !event ||
+    !reward ||
+    !reward.requirement
+  ){
+
+    return false;
+
+  }
+
+  const requirement =
+    reward.requirement;
+
+
+  /* =========================
+     PELO MENOS X MISSÕES
+  ========================= */
+
+  if(
+    requirement.type ===
+    "missions_completed"
+  ){
+
+    if(
+      !Array.isArray(
+        event.missions
+      )
+    ){
+
+      return false;
+
+    }
+
+    const requiredAmount =
+      Number(
+        requirement.amount
+      );
+
+    if(
+      !Number.isFinite(
+        requiredAmount
+      )
+    ){
+
+      return false;
+
+    }
+
+    const completedAmount =
+      event.missions.filter(
+        mission =>
+          isEventMissionCompleted(
+            event.id,
+            mission
+          )
+      ).length;
+
+
+    return (
+      completedAmount >=
+      requiredAmount
+    );
+
+  }
+
+
+  /* =========================
+     TODAS AS MISSÕES
+  ========================= */
+
+  if(
+    requirement.type ===
+    "all_missions_completed"
+  ){
+
+    if(
+      !Array.isArray(
+        event.missions
+      ) ||
+      event.missions.length === 0
+    ){
+
+      return false;
+
+    }
+
+    return event.missions.every(
+      mission =>
+        isEventMissionCompleted(
+          event.id,
+          mission
+        )
+    );
+
+  }
+
+
+  /* =========================
+     REQUISITO DESCONHECIDO
+  ========================= */
+
+  return false;
+
+}
 
 function incrementEventMissionProgress(
   eventId,
