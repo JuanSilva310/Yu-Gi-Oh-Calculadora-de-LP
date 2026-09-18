@@ -2899,6 +2899,64 @@ function abrirPainelDoPremio(
 
 }
 
+/* =======================
+   FECHAR PAINEL DO PRÊMIO
+   ETAPA 4C
+======================= */
+
+eventRewardKeyCloseButton.onclick = () => {
+
+  eventRewardKeyMenu.style.display =
+    "none";
+
+  eventDetailsMenu.style.display =
+    "flex";
+
+};
+
+eventRewardKeyCloseButton.onclick = () => {
+
+  eventRewardKeyMenu.style.display =
+    "none";
+
+  eventDetailsMenu.style.display =
+    "flex";
+
+};
+
+
+/* =======================
+   COPIAR CHAVE DO PRÊMIO
+   ETAPA 4C
+======================= */
+
+eventRewardKey.onclick = async () => {
+
+  const key =
+    eventRewardKey.textContent.trim();
+
+  if(!key){
+    return;
+  }
+
+  try{
+
+    await navigator.clipboard.writeText(
+      key
+    );
+
+    eventRewardKeyCopyStatus.textContent =
+      "Chave copiada!";
+
+  }catch(error){
+
+    eventRewardKeyCopyStatus.textContent =
+      "Não foi possível copiar automaticamente.";
+
+  }
+
+};
+
 
 function incrementEventMissionProgress(
   eventId,
