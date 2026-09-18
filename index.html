@@ -630,6 +630,120 @@ transform: translateY(-4vh);
   transform:scale(.98);
 }
 
+/* =======================
+   PAINEL DA CHAVE DO PRÊMIO
+   ETAPA 4C
+======================= */
+
+.event-reward-key-menu{
+  position:fixed;
+  inset:0;
+
+  background:rgba(0,0,0,.75);
+
+  display:none;
+
+  align-items:center;
+  justify-content:center;
+
+  z-index:10000;
+}
+
+.event-reward-key-box{
+  width:min(88vw,420px);
+
+  background:#0f6b66;
+
+  border-radius:20px;
+
+  padding:20px;
+
+  display:flex;
+  flex-direction:column;
+
+  gap:14px;
+
+  box-shadow:
+    0 8px 25px rgba(0,0,0,.45);
+
+  text-align:center;
+}
+
+.event-reward-key-title{
+  font-size:22px;
+  font-weight:bold;
+}
+
+.event-reward-key-type{
+  font-size:16px;
+  font-weight:bold;
+  opacity:.9;
+}
+
+.event-reward-key{
+  width:100%;
+
+  padding:14px;
+
+  border:none;
+  border-radius:12px;
+
+  background:rgba(0,0,0,.25);
+
+  color:#fff;
+
+  font-size:18px;
+  font-weight:bold;
+
+  text-align:center;
+
+  cursor:pointer;
+
+  user-select:text;
+}
+
+.event-reward-key:active{
+  transform:scale(.98);
+}
+
+.event-reward-key-instruction{
+  font-size:14px;
+  line-height:1.4;
+
+  opacity:.9;
+}
+
+#eventRewardKeyCloseButton{
+  width:100%;
+
+  padding:14px;
+
+  border:none;
+  border-radius:12px;
+
+  background:rgba(255,255,255,.15);
+
+  color:#fff;
+
+  font-size:18px;
+  font-weight:bold;
+
+  cursor:pointer;
+}
+
+#eventRewardKeyCloseButton:active{
+  transform:scale(.98);
+}
+
+.event-reward-key-copy-status{
+  font-size:14px;
+  font-weight:bold;
+
+  min-height:20px;
+
+  opacity:.95;
+}
+
 #eventDetailsCloseButton{
   width:100%;
 
@@ -1148,6 +1262,62 @@ transform: translateY(-4vh);
 
   </div>
 
+<!-- =======================
+     PAINEL DA CHAVE DO PRÊMIO
+     ETAPA 4C
+======================= -->
+
+<div
+  id="eventRewardKeyMenu"
+  class="event-reward-key-menu"
+>
+
+  <div
+    id="eventRewardKeyBox"
+    class="event-reward-key-box"
+  >
+
+    <div
+      id="eventRewardKeyTitle"
+      class="event-reward-key-title"
+    >
+      PRÊMIO OBTIDO
+    </div>
+
+    <div
+      id="eventRewardKeyType"
+      class="event-reward-key-type"
+    ></div>
+
+    <button
+      type="button"
+      id="eventRewardKey"
+      class="event-reward-key"
+    ></button>
+
+    <div
+      class="event-reward-key-instruction"
+    >
+      Pressione sobre a chave
+      para copiá-la.
+    </div>
+
+    <div
+      id="eventRewardKeyCopyStatus"
+      class="event-reward-key-copy-status"
+    ></div>
+
+    <button
+      type="button"
+      id="eventRewardKeyCloseButton"
+    >
+      Fechar
+    </button>
+
+  </div>
+
+</div>
+
 </div>
 
 
@@ -1324,6 +1494,45 @@ const eventRewardsList =
 
 const eventDetailsCloseButton =
   document.getElementById("eventDetailsCloseButton");
+/* =======================
+   PAINEL DA CHAVE DO PRÊMIO
+   ETAPA 4C
+======================= */
+
+const eventRewardKeyMenu =
+  document.getElementById(
+    "eventRewardKeyMenu"
+  );
+
+const eventRewardKeyBox =
+  document.getElementById(
+    "eventRewardKeyBox"
+  );
+
+const eventRewardKeyTitle =
+  document.getElementById(
+    "eventRewardKeyTitle"
+  );
+
+const eventRewardKeyType =
+  document.getElementById(
+    "eventRewardKeyType"
+  );
+
+const eventRewardKey =
+  document.getElementById(
+    "eventRewardKey"
+  );
+
+const eventRewardKeyCopyStatus =
+  document.getElementById(
+    "eventRewardKeyCopyStatus"
+  );
+
+const eventRewardKeyCloseButton =
+  document.getElementById(
+    "eventRewardKeyCloseButton"
+  );
 
 
 
@@ -1658,12 +1867,12 @@ rewards.forEach(item => {
 
     collectButton.onclick = () => {
 
-      console.log(
-        "Prêmio disponível para coleta:",
-        item.id
-      );
+  abrirPainelDoPremio(
+    event,
+    item
+  );
 
-    };
+};
 
 
     rewardBox.appendChild(
@@ -2611,6 +2820,85 @@ function isEventRewardUnlocked(
   return false;
 
 }
+
+/* =======================
+   ABRIR PAINEL DO PRÊMIO
+   ETAPA 4C
+======================= */
+
+function abrirPainelDoPremio(
+  event,
+  rewardItem
+){
+
+  if(
+    !event ||
+    !rewardItem ||
+    !rewardItem.reward
+  ){
+    return;
+  }
+
+  const reward =
+    rewardItem.reward;
+
+  if(
+    !reward.key
+  ){
+    return;
+  }
+
+  /* =========================
+     TIPO DO PRÊMIO
+  ========================= */
+
+  let rewardTypeText =
+    "Prêmio";
+
+  if(
+    reward.type ===
+    "bonus_key"
+  ){
+
+    rewardTypeText =
+      "Chave de bônus";
+
+  }
+  else if(
+    reward.type ===
+    "character_key"
+  ){
+
+    rewardTypeText =
+      "Chave de personagem";
+
+  }
+
+  /* =========================
+     PREENCHER PAINEL
+  ========================= */
+
+  eventRewardKeyType.textContent =
+    rewardTypeText;
+
+  eventRewardKey.textContent =
+    reward.key;
+
+  eventRewardKeyCopyStatus.textContent =
+    "";
+
+  /* =========================
+     TROCAR PAINÉIS
+  ========================= */
+
+  eventDetailsMenu.style.display =
+    "none";
+
+  eventRewardKeyMenu.style.display =
+    "flex";
+
+}
+
 
 function incrementEventMissionProgress(
   eventId,
