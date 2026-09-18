@@ -1136,6 +1136,16 @@ transform: translateY(-4vh);
 const STORAGE_KEY = "yugioh_lp_hud_v4";
 
 /* =======================
+   PROGRESSO DOS EVENTOS
+   ETAPA 3
+======================= */
+
+const EVENT_PROGRESS_KEY =
+  "yugioh_lp_hud_event_progress_v1";
+
+let eventProgress = {};
+
+/* =======================
    MODOS DE DUELO
 ======================= */
 
@@ -1393,21 +1403,33 @@ function abrirDetalhesDoEvento(event){
 
 
       /*
-        ETAPA 1:
-        PROGRESSO SOMENTE VISUAL.
+  ETAPA 3:
+  PROGRESSO REAL DA MISSÃO
+*/
 
-        Ainda não interpretamos
-        a descrição da missão.
-      */
+const progress =
+  document.createElement("div");
 
-      const progress =
-        document.createElement("div");
+progress.className =
+  "event-mission-progress";
 
-      progress.className =
-        "event-mission-progress";
 
-      progress.textContent =
-        "Progresso: 0";
+const currentProgress =
+  getEventMissionProgress(
+    event.id,
+    mission.id
+  );
+
+
+const target =
+  mission.condition &&
+  typeof mission.condition.target === "number"
+    ? mission.condition.target
+    : 0;
+
+
+progress.textContent =
+  `Progresso: ${currentProgress}/${target}`;
 
 
       missionBox.appendChild(
@@ -2210,6 +2232,634 @@ function loadState(){
 
 }
 
+
+/* =======================
+   STORAGE DOS EVENTOS
+======================= */
+
+function saveEventProgress(){
+
+  localStorage.setItem(
+    EVENT_PROGRESS_KEY,
+    JSON.stringify(eventProgress)
+  );
+
+}
+
+
+function loadEventProgress(){
+
+  const saved =
+    localStorage.getItem(
+      EVENT_PROGRESS_KEY
+    );
+
+  if(!saved){
+
+    eventProgress = {};
+
+    return;
+
+  }
+
+
+  try{
+
+    const parsed =
+      JSON.parse(saved);
+
+    if(
+      parsed &&
+      typeof parsed === "object" &&
+      !Array.isArray(parsed)
+    ){
+
+      eventProgress = parsed;
+
+    }else{
+
+      eventProgress = {};
+
+    }
+
+  }catch(error){
+
+    console.warn(
+      "Progresso dos eventos inválido. O progresso será reiniciado.",
+      error
+    );
+
+    eventProgress = {};
+
+  }
+
+}
+
+
+function getEventMissionProgress(
+  eventId,
+  missionId
+){
+
+  if(
+    !eventProgress[eventId]
+  ){
+
+    return 0;
+
+  }
+
+
+  const value =
+    eventProgress[eventId][missionId];
+
+
+  if(
+    typeof value !== "number" ||
+    !Number.isFinite(value)
+  ){
+
+    return 0;
+
+  }
+
+
+  return Math.max(
+    0,
+    Math.floor(value)
+  );
+
+}
+
+
+function incrementEventMissionProgress(
+  eventId,
+  mission,
+  amount = 1
+){
+
+  if(
+    !eventProgress[eventId]
+  ){
+
+    eventProgress[eventId] = {};
+
+  }
+
+
+  const current =
+    getEventMissionProgress(
+      eventId,
+      mission.id
+    );
+
+
+  const target =
+    mission.condition &&
+    typeof mission.condition.target === "number"
+      ? mission.condition.target
+      : Infinity;
+
+
+  const next =
+    Math.min(
+      current + amount,
+      target
+    );
+
+
+  eventProgress[eventId][mission.id] =
+    next;
+
+
+  return next;
+
+}
+
+
+function eventMissionMatchesDuel(
+  condition,
+  duelResult
+){
+
+  if(
+    !condition ||
+    !duelResult
+  ){
+
+    return false;
+
+  }
+
+
+  /* =======================
+     MISSÃO: DUELO VENCIDO
+  ======================= */
+
+  if(
+    condition.type === "duel_won"
+  ){
+
+    if(
+      !duelResult.winner ||
+      !duelResult.loser
+    ){
+
+      return false;
+
+    }
+
+
+    /*
+      Player específico
+    */
+
+    if(
+      condition.winnerPlayer &&
+      duelResult.winner.player !==
+        condition.winnerPlayer
+    ){
+
+      return false;
+
+    }
+
+
+    /*
+      Personagem vencedor
+    */
+
+    if(
+      Array.isArray(
+        condition.winnerCharacter
+      ) &&
+      !condition.winnerCharacter.includes(
+        duelResult.winner.characterId
+      )
+    ){
+
+      return false;
+
+    }
+
+
+    /*
+      Personagem derrotado
+    */
+
+    if(
+      Array.isArray(
+        condition.loserCharacter
+      ) &&
+      !condition.loserCharacter.includes(
+        duelResult.loser.characterId
+      )
+    ){
+
+      return false;
+
+    }
+
+
+    /*
+      Modo do duelo
+    */
+
+    if(
+      condition.mode &&
+      duelResult.mode !==
+        condition.mode
+    ){
+
+      return false;
+
+    }
+
+
+    return true;
+
+  }
+
+
+  /* =======================
+     MISSÃO: DUELO JOGADO
+  ======================= */
+
+  if(
+    condition.type === "duel_played"
+  ){
+
+    const player1 =
+      duelResult.players[0];
+
+    const player2 =
+      duelResult.players[1];
+
+
+    /*
+      Personagem participante
+    */
+
+    if(
+      Array.isArray(
+        condition.character
+      )
+    ){
+
+      const characterFound =
+        condition.character.includes(
+          player1.characterId
+        ) ||
+        condition.character.includes(
+          player2.characterId
+        );
+
+
+      if(!characterFound){
+
+        return false;
+
+      }
+
+    }
+
+
+    /*
+      Adversário específico
+    */
+
+    if(
+      Array.isArray(
+        condition.opponentCharacter
+      )
+    ){
+
+      const validPair =
+
+        (
+          Array.isArray(
+            condition.character
+          ) &&
+          condition.character.includes(
+            player1.characterId
+          ) &&
+          condition.opponentCharacter.includes(
+            player2.characterId
+          )
+        )
+
+        ||
+
+        (
+          Array.isArray(
+            condition.character
+          ) &&
+          condition.character.includes(
+            player2.characterId
+          ) &&
+          condition.opponentCharacter.includes(
+            player1.characterId
+          )
+        )
+
+        ||
+
+        (
+          !Array.isArray(
+            condition.character
+          ) &&
+          (
+            condition.opponentCharacter.includes(
+              player1.characterId
+            ) ||
+            condition.opponentCharacter.includes(
+              player2.characterId
+            )
+          )
+        );
+
+
+      if(!validPair){
+
+        return false;
+
+      }
+
+    }
+
+
+    /*
+      Modo
+    */
+
+    if(
+      condition.mode &&
+      duelResult.mode !==
+        condition.mode
+    ){
+
+      return false;
+
+    }
+
+
+    return true;
+
+  }
+
+
+  return false;
+
+}
+
+function createDuelResult(
+  result
+){
+
+  const players = [
+
+    {
+      player: 1,
+
+      characterId:
+        state.players[0].char
+
+    },
+
+    {
+      player: 2,
+
+      characterId:
+        state.players[1].char
+
+    }
+
+  ];
+
+
+  if(
+    result === "draw"
+  ){
+
+    return {
+
+      winner: null,
+
+      loser: null,
+
+      players,
+
+      mode:
+        state.config.duelMode,
+
+      duelId:
+        `DUEL-${Date.now()}`,
+
+      timestamp:
+        Date.now(),
+
+      duelDuration:
+        state.globalSec
+
+    };
+
+  }
+
+
+  const winnerIndex =
+    result === "p1"
+      ? 0
+      : 1;
+
+
+  const loserIndex =
+    result === "p1"
+      ? 1
+      : 0;
+
+
+  return {
+
+    winner: {
+
+      player:
+        winnerIndex + 1,
+
+      characterId:
+        state.players[
+          winnerIndex
+        ].char
+
+    },
+
+
+    loser: {
+
+      player:
+        loserIndex + 1,
+
+      characterId:
+        state.players[
+          loserIndex
+        ].char
+
+    },
+
+
+    players,
+
+    mode:
+      state.config.duelMode,
+
+    duelId:
+      `DUEL-${Date.now()}`,
+
+    timestamp:
+      Date.now(),
+
+    duelDuration:
+      state.globalSec
+
+  };
+
+}
+
+function processEventDuelResult(
+  duelResult
+){
+
+  if(
+    !duelResult
+  ){
+
+    return false;
+
+  }
+
+
+  if(
+    typeof events === "undefined" ||
+    !events ||
+    typeof events !== "object"
+  ){
+
+    return false;
+
+  }
+
+
+  let progressChanged =
+    false;
+
+
+  Object.values(events).forEach(
+    event => {
+
+      /*
+        EVENTOS INTERNOS NÃO
+        PARTICIPAM DO PROGRESSO
+      */
+
+      if(
+        !event ||
+        event.internalEvent === true ||
+        !Array.isArray(event.missions)
+      ){
+
+        return;
+
+      }
+
+
+      event.missions.forEach(
+        mission => {
+
+          if(
+            !mission ||
+            !mission.id ||
+            !mission.condition
+          ){
+
+            return;
+
+          }
+
+
+          const current =
+            getEventMissionProgress(
+              event.id,
+              mission.id
+            );
+
+
+          const target =
+            mission.condition.target;
+
+
+          /*
+            MISSÃO JÁ CONCLUÍDA
+          */
+
+          if(
+            typeof target === "number" &&
+            current >= target
+          ){
+
+            return;
+
+          }
+
+
+          /*
+            VERIFICA A CONDIÇÃO
+          */
+
+          const matches =
+            eventMissionMatchesDuel(
+              mission.condition,
+              duelResult
+            );
+
+
+          if(!matches){
+
+            return;
+
+          }
+
+
+          /*
+            INCREMENTA
+          */
+
+          incrementEventMissionProgress(
+            event.id,
+            mission,
+            1
+          );
+
+
+          progressChanged =
+            true;
+
+        }
+      );
+
+    }
+  );
+
+
+  if(progressChanged){
+
+    saveEventProgress();
+
+  }
+
+
+  return progressChanged;
+
+}
+
 /* =======================
    TEMPO
 ======================= */
@@ -2983,6 +3633,20 @@ async function declareWinner(){
     1. BLOQUEIA IMEDIATAMENTE O DUELO
   */
 
+  /*
+    SEGURANÇA:
+    UM DUELO SÓ PODE SER PROCESSADO
+    UMA VEZ.
+  */
+
+  if(
+    state.musicPhase === "ended"
+  ){
+
+    return;
+
+  }
+
   state.running = false;
 
   state.turn = null;
@@ -3055,6 +3719,13 @@ async function declareWinner(){
 
   showDuelResult(message);
 
+const duelResult =
+  createDuelResult(result);
+
+processEventDuelResult(
+  duelResult
+);
+
 
   /*
     7. SALVA O ESTADO FINAL
@@ -3093,6 +3764,7 @@ function init(){
 
   loadState();
 
+loadEventProgress();
 
   /*
     SEGURANÇA:
