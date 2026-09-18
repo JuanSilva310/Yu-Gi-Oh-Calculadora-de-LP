@@ -29,8 +29,15 @@ const events = {
         description:
           "Vença 10 duelos como Player 1.",
 
+        condition: {
+          type: "duel_won",
+          winnerPlayer: 1,
+          target: 10
+        },
+
         reward: null
       },
+
 
       {
         id: "tcg_boas_vindas_missao_02",
@@ -38,14 +45,30 @@ const events = {
         description:
           "Vença 10 duelos como Player 2.",
 
+        condition: {
+          type: "duel_won",
+          winnerPlayer: 2,
+          target: 10
+        },
+
         reward: null
       },
+
 
       {
         id: "tcg_boas_vindas_missao_03",
 
         description:
           "Vença 10 duelos como Yugi Muto/Yami Yugi.",
+
+        condition: {
+          type: "duel_won",
+          winnerCharacter: [
+            "yugi_muto",
+            "yami_yugi"
+          ],
+          target: 10
+        },
 
         reward: {
           type: "bonus_key",
@@ -87,8 +110,17 @@ const events = {
         description:
           "Vença 10 duelos com Seto Kaiba.",
 
+        condition: {
+          type: "duel_won",
+          winnerCharacter: [
+            "seto_kaiba"
+          ],
+          target: 10
+        },
+
         reward: null
       },
+
 
       {
         id: "copa_kc_missao_02",
@@ -96,14 +128,38 @@ const events = {
         description:
           "Derrote Yugi Muto/Yami Yugi 10 vezes em duelo como Seto Kaiba.",
 
+        condition: {
+          type: "duel_won",
+          winnerCharacter: [
+            "seto_kaiba"
+          ],
+          loserCharacter: [
+            "yugi_muto",
+            "yami_yugi"
+          ],
+          target: 10
+        },
+
         reward: null
       },
+
 
       {
         id: "copa_kc_missao_03",
 
         description:
           "Derrote Seto Kaiba 10 vezes em duelo como Yami Yugi.",
+
+        condition: {
+          type: "duel_won",
+          winnerCharacter: [
+            "yami_yugi"
+          ],
+          loserCharacter: [
+            "seto_kaiba"
+          ],
+          target: 10
+        },
 
         reward: null
       }
@@ -126,6 +182,7 @@ const events = {
         }
       },
 
+
       {
         id: "copa_kc_reward_02",
 
@@ -139,6 +196,7 @@ const events = {
           key: "KC_CUP_010_BKC"
         }
       },
+
 
       {
         id: "copa_kc_reward_03",
@@ -187,8 +245,20 @@ const events = {
         description:
           "Derrote Seto Kaiba 10 vezes em duelo usando Yami Yugi.",
 
+        condition: {
+          type: "duel_won",
+          winnerCharacter: [
+            "yami_yugi"
+          ],
+          loserCharacter: [
+            "seto_kaiba"
+          ],
+          target: 10
+        },
+
         reward: null
       },
+
 
       {
         id: "areias_do_destino_missao_02",
@@ -196,8 +266,20 @@ const events = {
         description:
           "Derrote Marik Ishtar 1 vez como Yami Yugi.",
 
+        condition: {
+          type: "duel_won",
+          winnerCharacter: [
+            "yami_yugi"
+          ],
+          loserCharacter: [
+            "marik_ishtar"
+          ],
+          target: 1
+        },
+
         reward: null
       },
+
 
       {
         id: "areias_do_destino_missao_03",
@@ -205,8 +287,17 @@ const events = {
         description:
           "Jogue 100 duelos como Yami Yugi.",
 
+        condition: {
+          type: "duel_played",
+          character: [
+            "yami_yugi"
+          ],
+          target: 100
+        },
+
         reward: null
       },
+
 
       {
         id: "areias_do_destino_missao_04",
@@ -214,8 +305,17 @@ const events = {
         description:
           "Tenha 100 vitórias como Yami Yugi.",
 
+        condition: {
+          type: "duel_won",
+          winnerCharacter: [
+            "yami_yugi"
+          ],
+          target: 100
+        },
+
         reward: null
       },
+
 
       {
         id: "areias_do_destino_missao_05",
@@ -223,8 +323,20 @@ const events = {
         description:
           "Derrote Ishizu Ishtar 1 vez como Yami Yugi.",
 
+        condition: {
+          type: "duel_won",
+          winnerCharacter: [
+            "yami_yugi"
+          ],
+          loserCharacter: [
+            "ishizu_ishtar"
+          ],
+          target: 1
+        },
+
         reward: null
       },
+
 
       {
         id: "areias_do_destino_missao_06",
@@ -232,8 +344,20 @@ const events = {
         description:
           "Derrote Odion 1 vez como Yami Yugi.",
 
+        condition: {
+          type: "duel_won",
+          winnerCharacter: [
+            "yami_yugi"
+          ],
+          loserCharacter: [
+            "odion"
+          ],
+          target: 1
+        },
+
         reward: null
       },
+
 
       {
         id: "areias_do_destino_missao_07",
@@ -241,14 +365,35 @@ const events = {
         description:
           "Derrote Maximillion Pegasus 1 vez como Yami Yugi.",
 
+        condition: {
+          type: "duel_won",
+          winnerCharacter: [
+            "yami_yugi"
+          ],
+          loserCharacter: [
+            "maximillion_pegasus"
+          ],
+          target: 1
+        },
+
         reward: null
       },
+
 
       {
         id: "areias_do_destino_missao_08",
 
         description:
           "Jogue 100 duelos contra Seto Kaiba no modo DM.",
+
+        condition: {
+          type: "duel_played",
+          opponentCharacter: [
+            "seto_kaiba"
+          ],
+          mode: "dm",
+          target: 100
+        },
 
         reward: null
       }
@@ -269,6 +414,7 @@ const events = {
           key: "DS_081_000_BKC"
         }
       },
+
 
       {
         id: "areias_do_destino_reward_02",
