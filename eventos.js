@@ -455,13 +455,40 @@ const events = {
 
   compra: {
 
-    id: "compra",
+  id: "compra",
+  eventId: "0B0",
+  internalEvent: true,
 
-    eventId: "0B0",
+  rewards: [
 
-    internalEvent: true
+    {
+      type: "character_key",
+      key: "CK-MOKUBA-KAIBA-000B"
+    },
 
-  },
+    {
+      type: "character_key",
+      key: "CK-ATÉM-000A"
+    },
+
+    {
+      type: "bonus_key",
+      key: "LP-1000-00-0B"
+    },
+
+    {
+      type: "bonus_key",
+      key: "LP-1500-00-0E"
+    },
+
+    {
+      type: "background_key",
+      key: "TCG-001-Pro-LDK-0F"
+    }
+
+  ]
+
+},
 
 
   /* ==================================================
@@ -470,13 +497,45 @@ const events = {
 
   roleta: {
 
-    id: "roleta",
+  id: "roleta",
+  eventId: "111",
+  internalEvent: true,
 
-    eventId: "111",
+  rewards: [
 
-    internalEvent: true
+    {
+      type: "bonus_key",
+      key: "BK-01001-ADY-TN-01"
+    },
 
-  },
+    {
+      type: "bonus_key",
+      key: "BK-01001-ADY-DM-02"
+    },
+
+    {
+      type: "bonus_key",
+      key: "BK-01001-ADY-OLND-03"
+    },
+
+    {
+      type: "character_key",
+      key: "CK-MOKUBA-OLND-001C"
+    },
+
+    {
+      type: "character_key",
+      key: "CK-TÉA-GARDNER-OLND-000F"
+    },
+
+    {
+      type: "bonus_key",
+      key: "LP-1000-00-0A"
+    }
+
+  ]
+
+},
 
 
   /* ==================================================
