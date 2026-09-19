@@ -3383,19 +3383,22 @@ function executarBonus(
 
     const pendingBonus = {
 
-      type:
-        "lp_bonus",
+  type:
+    "lp_bonus",
 
-      amount:
-        bonus.content.amount,
+  amount:
+    bonus.content.amount,
 
-      usage:
-        bonus.content.usage,
+  usage:
+    bonus.content.usage,
 
-      applyAt:
-        bonus.content.applyAt
+  applyAt:
+    bonus.content.applyAt,
 
-    };
+  player:
+    bonus.content.player || 1
+
+};
 
     localStorage.setItem(
       "yugioh_pending_lp_bonus_v1",
@@ -4233,6 +4236,132 @@ function processEventDuelResult(
 }
 
 /* =======================
+   APLICAR BÔNUS DE LP
+   NO INÍCIO DO DUELO
+======================= */
+
+function aplicarBonusLPNoInicioDoDuelo(){
+
+  const storageKey =
+    "yugioh_pending_lp_bonus_v1";
+
+  const saved =
+    localStorage.getItem(storageKey);
+
+  if(!saved){
+    return false;
+  }
+
+  let pendingBonus;
+
+  try{
+
+    pendingBonus =
+      JSON.parse(saved);
+
+  }catch(error){
+
+    console.warn(
+      "Bônus de LP pendente inválido.",
+      error
+    );
+
+    return false;
+
+  }
+
+  if(
+    !pendingBonus ||
+    pendingBonus.type !== "lp_bonus"
+  ){
+
+    return false;
+
+  }
+
+  if(
+    pendingBonus.applyAt !==
+    "next_duel_start"
+  ){
+
+    return false;
+
+  }
+
+  const amount =
+    Number(pendingBonus.amount);
+
+  if(
+    !Number.isFinite(amount) ||
+    amount <= 0
+  ){
+
+    return false;
+
+  }
+
+  const playerNumber =
+    pendingBonus.player === 2
+      ? 2
+      : 1;
+
+  const playerIndex =
+    playerNumber - 1;
+
+  const player =
+    state.players[playerIndex];
+
+  if(!player){
+    return false;
+  }
+
+  /*
+    APLICA O BÔNUS
+    AO JOGADOR LÓGICO
+  */
+
+  player.lp += amount;
+
+  /*
+    ATUALIZA O PAINEL FÍSICO
+    ATRAVÉS DAS REFERÊNCIAS
+    JÁ MAPEADAS
+  */
+
+  if(playerIndex === 0){
+
+    lp1El.textContent =
+      player.lp;
+
+  }else{
+
+    lp2El.textContent =
+      player.lp;
+
+  }
+
+  /*
+    BÔNUS DE USO ÚNICO
+    É CONSUMIDO AGORA
+  */
+
+  if(
+    pendingBonus.usage ===
+    "single_use"
+  ){
+
+    localStorage.removeItem(
+      storageKey
+    );
+
+  }
+
+  return true;
+
+}
+
+
+/* =======================
    TEMPO
 ======================= */
 setInterval(()=>{
@@ -4411,6 +4540,8 @@ state.starting = true;
     INICIA A MÚSICA
     PRINCIPAL DO DUELO
   */
+
+aplicarBonusLPNoInicioDoDuelo();
 
   playDuelBaseMusic();
 
