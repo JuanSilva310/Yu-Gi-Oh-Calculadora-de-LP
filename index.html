@@ -1176,15 +1176,15 @@ transform: translateY(-4vh);
 
       <div class="turn-time">
         <span id="time1">00:00</span>
-        <button class="turn-btn" onclick="switchTurn(1)">↻</button>
+        <button class="turn-btn" onclick="switchTurn(2)">↻</button>
       </div>
     </div>
 
     <div class="controls">
-      <button class="plus" onclick="openCalc(1,'+')">+</button>
-      <button class="minus" onclick="openCalc(1,'-')">−</button>
-      <button class="div" onclick="openCalc(1,'/')">÷</button>
-      <button class="mult" onclick="openCalc(1,'*')">×</button>
+      <button class="plus" onclick="openCalc(2,'+')">+</button>
+      <button class="minus" onclick="openCalc(2,'-')">−</button>
+      <button class="div" onclick="openCalc(2,'/')">÷</button>
+      <button class="mult" onclick="openCalc(2,'*')">×</button>
     </div>
 
   </div>
@@ -1223,16 +1223,16 @@ transform: translateY(-4vh);
       </div>
 
       <div class="turn-time">
-        <button class="turn-btn" onclick="switchTurn(2)">↻</button>
+        <button class="turn-btn" onclick="switchTurn(1)">↻</button>
         <span id="time2">00:00</span>
       </div>
     </div>
 
     <div class="controls">
-      <button class="plus" onclick="openCalc(2,'+')">+</button>
-      <button class="minus" onclick="openCalc(2,'-')">−</button>
-      <button class="div" onclick="openCalc(2,'/')">÷</button>
-      <button class="mult" onclick="openCalc(2,'*')">×</button>
+      <button class="plus" onclick="openCalc(1,'+')">+</button>
+      <button class="minus" onclick="openCalc(1,'-')">−</button>
+      <button class="div" onclick="openCalc(1,'/')">÷</button>
+      <button class="mult" onclick="openCalc(1,'*')">×</button>
     </div>
 
   </div>
@@ -1712,25 +1712,53 @@ turn:null,
    ELEMENTOS
 ======================= */
 const gEl = document.getElementById("globalTime");
-const t1El = document.getElementById("time1");
-const t2El = document.getElementById("time2");
-const lp1El = document.getElementById("lp1");
-const lp2El = document.getElementById("lp2");
-const overlay = document.getElementById("overlay");
-const playBtn = document.getElementById("play");
-const configBtn = document.querySelectorAll(".icon")[1];
-const welcomeScreen = document.getElementById("welcomeScreen");
-const welcomeBtn = document.getElementById("welcomeBtn");
-const name1El = document.getElementById("name1");
-const name2El = document.getElementById("name2");
-const duelResultEl = document.getElementById("duelResult");
+const t2El = document.getElementById("time1");
+const t1El = document.getElementById("time2");
+const lp1El =
+  document.getElementById("lp2");
+
+const lp2El =
+  document.getElementById("lp1");
+
+const overlay =
+  document.getElementById("overlay");
+
+const playBtn =
+  document.getElementById("play");
+
+const configBtn =
+  document.querySelectorAll(".icon")[1];
+
+const welcomeScreen =
+  document.getElementById("welcomeScreen");
+
+const welcomeBtn =
+  document.getElementById("welcomeBtn");
+
+const name1El =
+  document.getElementById("name2");
+
+const name2El =
+  document.getElementById("name1");
+
+const duelResultEl =
+  document.getElementById("duelResult");
+
 const portrait1El =
-  document.getElementById("portrait1");
+  document.getElementById("portrait2");
 
 const portrait2El =
-  document.getElementById("portrait2");
-const alterEgoButton1El = document.getElementById("alterEgoButton1");
-const alterEgoButton2El = document.getElementById("alterEgoButton2");
+  document.getElementById("portrait1");
+
+const alterEgoButton1El =
+  document.getElementById(
+    "alterEgoButton2"
+  );
+
+const alterEgoButton2El =
+  document.getElementById(
+    "alterEgoButton1"
+  );
 const extrasBtn = document.getElementById("extrasBtn");
 const extrasMenu = document.getElementById("extrasMenu");
 const eventsMenu = document.getElementById("eventsMenu");
