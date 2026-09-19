@@ -744,6 +744,101 @@ transform: translateY(-4vh);
   opacity:.95;
 }
 
+/* =======================
+   PAINEL RESGATE DE BÔNUS
+======================= */
+
+.bonus-menu{
+  position:fixed;
+  inset:0;
+
+  background:rgba(0,0,0,.75);
+
+  display:none;
+
+  align-items:center;
+  justify-content:center;
+
+  z-index:10001;
+}
+
+.bonus-box{
+  width:min(90vw,500px);
+
+  background:#0f6b66;
+
+  border-radius:20px;
+
+  padding:20px;
+
+  display:flex;
+  flex-direction:column;
+
+  gap:15px;
+
+  box-shadow:
+    0 8px 25px rgba(0,0,0,.45);
+}
+
+.bonus-title{
+  font-size:22px;
+  font-weight:bold;
+
+  text-align:center;
+}
+
+.bonus-fields{
+  display:flex;
+  gap:10px;
+}
+
+.bonus-field{
+  flex:1;
+
+  min-width:0;
+
+  padding:14px;
+
+  border:none;
+  border-radius:12px;
+
+  background:rgba(255,255,255,.15);
+
+  color:#fff;
+
+  font-size:17px;
+
+  outline:none;
+}
+
+.bonus-field::placeholder{
+  color:rgba(255,255,255,.75);
+}
+
+.bonus-rescue-button,
+#bonusBackButton{
+  width:100%;
+
+  padding:14px;
+
+  border:none;
+  border-radius:12px;
+
+  background:rgba(255,255,255,.15);
+
+  color:#fff;
+
+  font-size:18px;
+  font-weight:bold;
+
+  cursor:pointer;
+}
+
+.bonus-rescue-button:active,
+#bonusBackButton:active{
+  transform:scale(.98);
+}
+
 #eventDetailsCloseButton{
   width:100%;
 
@@ -1184,6 +1279,66 @@ transform: translateY(-4vh);
 </div>
 
 <!-- =======================
+     PAINEL RESGATE DE BÔNUS
+======================= -->
+
+<div
+  id="bonusMenu"
+  class="bonus-menu"
+>
+
+  <div
+    class="bonus-box"
+  >
+
+    <div
+      class="bonus-title"
+    >
+      RESGATAR BÔNUS
+    </div>
+
+    <div
+      class="bonus-fields"
+    >
+
+      <input
+        type="text"
+        id="bonusKeyInput"
+        class="bonus-field"
+        placeholder="CHAVE"
+        autocomplete="off"
+      >
+
+      <input
+        type="text"
+        id="bonusEventIdInput"
+        class="bonus-field"
+        placeholder="ID"
+        autocomplete="off"
+      >
+
+    </div>
+
+    <button
+      type="button"
+      id="bonusRescueButton"
+      class="bonus-rescue-button"
+    >
+      RESGATAR BÔNUS
+    </button>
+
+    <button
+      type="button"
+      id="bonusBackButton"
+    >
+      VOLTAR
+    </button>
+
+  </div>
+
+</div>
+
+<!-- =======================
      DETALHES DO EVENTO
 ======================= -->
 
@@ -1534,7 +1689,20 @@ const eventRewardKeyCloseButton =
     "eventRewardKeyCloseButton"
   );
 
+const bonusMenu =
+  document.getElementById("bonusMenu");
 
+const bonusKeyInput =
+  document.getElementById("bonusKeyInput");
+
+const bonusEventIdInput =
+  document.getElementById("bonusEventIdInput");
+
+const bonusRescueButton =
+  document.getElementById("bonusRescueButton");
+
+const bonusBackButton =
+  document.getElementById("bonusBackButton");
 
 
 
@@ -2818,6 +2986,47 @@ function isEventRewardUnlocked(
   ========================= */
 
   return false;
+
+}
+
+
+/* =======================
+   LOCALIZAR CHAVE DE BÔNUS
+   MOTOR DE RESGATE
+======================= */
+
+function encontrarBonusPorChave(
+  key
+){
+
+  if(!key){
+    return null;
+  }
+
+  const normalizedKey =
+    key.trim().toUpperCase();
+
+  for(
+    const bonusId in bonusKeys
+  ){
+
+    const bonus =
+      bonusKeys[bonusId];
+
+    if(
+      bonus &&
+      bonus.key &&
+      bonus.key.toUpperCase() ===
+      normalizedKey
+    ){
+
+      return bonus;
+
+    }
+
+  }
+
+  return null;
 
 }
 
@@ -6328,6 +6537,68 @@ extrasEventsButton.onclick = () => {
   eventsMenu.style.display = "flex";
 
 };
+/* =======================
+   BÔNUS
+   ETAPA 1 — VISUAL
+======================= */
+
+const extrasBonusButton =
+  extrasMenu.querySelector(
+    ".extras-box button:nth-child(2)"
+  );
+
+
+extrasBonusButton.onclick = () => {
+
+  extrasMenu.style.display =
+    "none";
+
+  bonusMenu.style.display =
+    "flex";
+
+};
+
+
+/* =======================
+   INÍCIO DO RESGATE
+   MOTOR DE RESGATE
+======================= */
+
+bonusRescueButton.onclick = () => {
+
+  const key =
+    bonusKeyInput.value.trim();
+
+  const bonus =
+    encontrarBonusPorChave(key);
+
+  if(!bonus){
+
+    alert(
+      "Chave de bônus inválida."
+    );
+
+    return;
+
+  }
+
+  console.log(
+    "Bônus encontrado:",
+    bonus
+  );
+
+};
+
+bonusBackButton.onclick = () => {
+
+  bonusMenu.style.display =
+    "none";
+
+  extrasMenu.style.display =
+    "flex";
+
+};
+
 
 eventsCloseButton.onclick = () => {
 
